@@ -1,9 +1,9 @@
 CC=g++
-CPPFLAGS=-Ilib/libosmium/include -W -Wall -Wextra -O -std=c++11
+CPPFLAGS=-W -Wall -Wextra -O -std=c++11
 LD=g++
 
 bin/osmpbf2pgsql : obj/osmpbf2pgsql.o obj/PbfReader.o
-	$(LD) $(LDFLAGS) obj/osmpbf2pgsql.o obj/PbfReader.o -o bin/osmpbf2pgsql -lz -lbz2 -lexpat
+	$(LD) $(LDFLAGS) obj/osmpbf2pgsql.o obj/PbfReader.o -o bin/osmpbf2pgsql -pthread -lz -lprotobuf-lite -losmpbf
 obj/osmpbf2pgsql.o : src/osmpbf2pgsql.hpp src/osmpbf2pgsql.cpp
 	$(CC) $(CPPFLAGS) -c src/osmpbf2pgsql.cpp -o obj/osmpbf2pgsql.o
 obj/PbfReader.o : src/PbfReader.hpp src/PbfReader.cpp

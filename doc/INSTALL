@@ -1,18 +1,12 @@
-Install LibOsmium dependencies:
-   sudo apt-get install \
-	cmake cmake-curses-gui make libexpat1-dev zlib1g-dev libbz2-dev \
-	libboost-dev libboost-program-options-dev libgdal-dev \
-	libgeos++-dev libproj-dev doxygen graphviz libsparsehash-dev
+Install OSM-Binary dependencies
+	sudo apt-get install -y libprotobuf-dev protobuf-compiler zlib1g-dev libboost-dev
 
 	
-Install LibOsmium:
-	sudo apt-get install -y git
-	cd ~
-	git clone https://github.com/osmcode/libosmium/
-	cd ~/libosmium
-	git checkout v2.5.4
+Download OSM-Binary (libosmpbf)
 
-	mkdir build
-	cd build
-	cmake -DINSTALL_PROTOZERO=ON ..
-	make
+	sudo apt-get install -y git
+	git clone https://github.com/scrosby/OSM-binary
+	cd OSM-Binary
+	git checkout v1.3.3
+	make -C src 
+	sudo make -C src install
