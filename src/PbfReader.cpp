@@ -8,6 +8,7 @@
 #include <string>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
+#include <boost/lexical_cast.hpp>
 #include <osmpbf/osmpbf.h>
 #include "PbfReader.hpp"
 #include "DatablockWorklist.hpp"
@@ -124,6 +125,12 @@ namespace osmpbf2apidb
                 throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
             }
 
+            std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
+                      _calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
+                      << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
+                      "\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
+
+
             const DatablockWorklist::CompressedDatablock newDatablock =
             {
                 pCurrentBufferCursor + ntohl(*pBlobHeaderLength),     // Starting byte of payload
@@ -136,16 +143,11 @@ namespace osmpbf2apidb
             std::cout << "\tAdded datablock from offset 0x" << std::hex <<
                       _calculateFileOffset(newDatablock.pByteStart) << " to 0x" <<
                       _calculateFileOffset(newDatablock.pByteEnd) << " (" <<
-                      std::dec << newDatablock.sizeInBytes << " bytes) to worklist " << std::endl;
+                      std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
+                      boost::lexical_cast<std::string>(currWorklist) << std::endl;
 
             // Update current worklist, wrapping back to zero if we've hit the last one
             currWorklist = (currWorklist + 1) % numWorklists;
-
-            std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
-                      _calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
-                      << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
-                      "\tPayload: "
-                      << blobHeader.datasize() << " bytes" << std::endl;
 
             pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
         }
