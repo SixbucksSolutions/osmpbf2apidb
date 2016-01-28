@@ -8,7 +8,7 @@ OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 ASTYLE=astyle
 ASTYLE_FLAGS=--options=astyle.cfg 
 
-bin/osmpbf2pgsql : $(OBJ_FILES)
+bin/osmpbf2apidb : $(OBJ_FILES)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LD_LIBS)
 
 obj/%.o : src/%.cpp 

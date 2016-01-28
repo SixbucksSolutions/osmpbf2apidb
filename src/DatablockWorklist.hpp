@@ -13,13 +13,13 @@ namespace osmpbf2apidb
             struct CompressedDatablock
             {
                 /// Offset in memory-mapped buffer where block begins
-                uint64_t     	offsetStart;
+                uint64_t        offsetStart;
 
                 /// Ending offset (last valid byte)
-                uint64_t		offsetEnd;
+                uint64_t        offsetEnd;
 
                 /// Total bytes of compressed data
-                std::int32_t   	sizeInBytes;
+                std::int32_t    sizeInBytes;
             };
 
             DatablockWorklist();

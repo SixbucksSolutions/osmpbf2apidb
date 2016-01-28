@@ -3,7 +3,9 @@
 
 #include <string>
 #include <cstdint>
+#include <list>
 #include <boost/shared_array.hpp>
+#include <osmpbf/osmpbf.h>
 #include "DatablockWorklist.hpp"
 
 namespace osmpbf2apidb
@@ -38,18 +40,30 @@ namespace osmpbf2apidb
                 boost::shared_array<DatablockWorklist> pWorklists,
                 const unsigned int  numWorklists );
 
+            /**
+             * Given a starting offset and number of bytes, decompress and decode the data in that block, handing
+             *  the caller back a set of OSM entities (i.e., Node, Way, Relations) that they can do something with
+             *
+             * @param [in]  compressedData  Information about block to process
+             */
+            std::list<int> getOsmEntitiesFromCompressedDatablock(
+                const DatablockWorklist::CompressedDatablock&   compressedData );
+
             ~PbfReader();
 
         private:
 
-            std::uint64_t
-            m_pbfFileSizeInBytes;
-            char*
-            m_pMemoryMappedBuffer;
+            std::uint64_t   m_pbfFileSizeInBytes;
+            char*           m_pMemoryMappedBuffer;
 
             std::uint64_t       _calculateFileOffset(
                 char const* const  pFilePtr
             ) const;
+
+            void            _inflateCompressedPayload(
+                const OSMPBF::Blob& currDataPayload,
+                char*               pInflateBuffer
+            );
     };
 }
 

@@ -42,7 +42,8 @@ int main(
         for ( unsigned int i = 0; i < numberWorkerThreads; ++i )
         {
             pWorkerThreads[i] = std::thread( processWorklist, i,
-                                             std::ref(pWorklists[i]) );
+                                             std::ref(pWorklists[i]),
+                                             std::ref(pbfReader) );
         }
 
         // Wait for all threads to come home
@@ -74,7 +75,8 @@ int main(
 
 void processWorklist(
     const unsigned int                  workerId,
-    osmpbf2apidb::DatablockWorklist&    worklist )
+    osmpbf2apidb::DatablockWorklist&    worklist,
+    osmpbf2apidb::PbfReader&            pbfReader )
 {
     std::cout << "Worker thread " <<
               boost::lexical_cast<std::string>(workerId) << " started!" <<
@@ -92,6 +94,8 @@ void processWorklist(
                   " working datablock starting at offset 0x" << std::hex <<
                   currBlock.offsetStart << std::endl;
 
+        // Hand offsets to PBF reader, get a set of OSM entities back that we can work with
+        pbfReader.getOsmEntitiesFromCompressedDatablock( currBlock );
     }
 
 

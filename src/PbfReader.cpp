@@ -5,11 +5,14 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstdint>
+#include <cstdlib>
 #include <string>
+#include <list>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <osmpbf/osmpbf.h>
+#include <zlib.h>
 #include "PbfReader.hpp"
 #include "DatablockWorklist.hpp"
 
@@ -155,6 +158,43 @@ namespace osmpbf2apidb
                   << std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
     }
 
+
+
+    std::list<int> PbfReader::getOsmEntitiesFromCompressedDatablock(
+        const DatablockWorklist::CompressedDatablock&   compressedData )
+    {
+        OSMPBF::Blob currDataPayload;
+
+        if ( currDataPayload.ParseFromArray(m_pMemoryMappedBuffer +
+                                            compressedData.offsetStart, compressedData.sizeInBytes) ==
+                false )
+        {
+            throw ( "Could not read data payload" );
+        }
+
+        std::cout << "\tRead payload successfully!" << std::endl;
+
+        const std::size_t inflatedSize = currDataPayload.raw_size();
+
+        std::cout << "\tCompressed payload: " <<
+                  boost::lexical_cast<std::string>(compressedData.sizeInBytes) <<
+                  ", inflated data size: " <<
+                  boost::lexical_cast<std::string>(inflatedSize) <<
+                  std::endl;
+
+        char* pDecompressedPayload = new char[inflatedSize];
+
+        _inflateCompressedPayload( currDataPayload,
+                                   pDecompressedPayload );
+
+        delete [] pDecompressedPayload;
+        pDecompressedPayload = nullptr;
+
+        std::list<int> myList;
+
+        return myList;
+    }
+
     PbfReader::~PbfReader()
     {
         munmap( m_pMemoryMappedBuffer, m_pbfFileSizeInBytes );
@@ -171,5 +211,15 @@ namespace osmpbf2apidb
         char const* const   pFilePtr) const
     {
         return (pFilePtr - m_pMemoryMappedBuffer);
+    }
+
+    void PbfReader::_inflateCompressedPayload(
+        const OSMPBF::Blob&     currDataPayload,
+        char*                   pInflateBuffer )
+    {
+        const std::size_t inflatedSize = currDataPayload.raw_size();
+
+        // Zlib object to perform inflate
+        z_stream        zStream;
     }
 }
