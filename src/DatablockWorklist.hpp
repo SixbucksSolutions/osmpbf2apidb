@@ -2,7 +2,7 @@
 #define _DATABLOCKWORKLIST_HPP
 
 #include <cstdint>
-#include <vector>
+#include <list>
 
 namespace osmpbf2apidb
 {
@@ -12,17 +12,34 @@ namespace osmpbf2apidb
 
             struct CompressedDatablock
             {
-                /// Pointer to first byte of compressed block
-                char*          pByteStart;
+                /// Offset in memory-mapped buffer where block begins
+                uint64_t     	offsetStart;
 
-                /// Pointer to the last byte of the compressed block
-                char*          pByteEnd;
+                /// Ending offset (last valid byte)
+                uint64_t		offsetEnd;
 
                 /// Total bytes of compressed data
-                std::int32_t   sizeInBytes;
+                std::int32_t   	sizeInBytes;
             };
 
             DatablockWorklist();
+
+            /**
+             * Is the worklist empty?
+             *
+             * @return True if empty, else false
+             */
+            bool empty() const;
+
+            /**
+             * Get next worklist item to process
+             *
+             * @return Next item on list
+             *
+             * @note This reduces the size of the list by one (the returned element
+             *      has been removed)
+             */
+            CompressedDatablock getNextDatablock();
 
             /**
              * Add an entry about a compressed block of data that needs processing
@@ -36,7 +53,7 @@ namespace osmpbf2apidb
             ~DatablockWorklist();
 
         private:
-            std::vector<CompressedDatablock>    m_datablockList;
+            std::list<CompressedDatablock>    m_datablockList;
     };
 }
 

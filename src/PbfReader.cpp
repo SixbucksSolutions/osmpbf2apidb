@@ -130,19 +130,18 @@ namespace osmpbf2apidb
                       << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
                       "\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
 
-
             const DatablockWorklist::CompressedDatablock newDatablock =
             {
-                pCurrentBufferCursor + ntohl(*pBlobHeaderLength),     // Starting byte of payload
-                pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1,
+                _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength)),     // start offset
+                _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
                 blobHeader.datasize()
             };
 
             pWorklists[currWorklist].addDatablock(newDatablock);
 
             std::cout << "\tAdded datablock from offset 0x" << std::hex <<
-                      _calculateFileOffset(newDatablock.pByteStart) << " to 0x" <<
-                      _calculateFileOffset(newDatablock.pByteEnd) << " (" <<
+                      newDatablock.offsetStart << " to 0x" <<
+                      newDatablock.offsetEnd << " (" <<
                       std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
                       boost::lexical_cast<std::string>(currWorklist) << std::endl;
 
