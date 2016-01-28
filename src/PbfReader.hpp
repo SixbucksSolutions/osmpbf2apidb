@@ -1,5 +1,10 @@
+#ifndef _PBFREADER_HPP
+#define _PBFREADER_HPP
+
 #include <string>
 #include <cstdint>
+#include <boost/shared_array.hpp>
+#include "DatablockWorklist.hpp"
 
 namespace osmpbf2apidb
 {
@@ -23,9 +28,15 @@ namespace osmpbf2apidb
 			std::uint64_t getFileSizeInBytes() const;
 
 			/**
-			 * Determine starting location for all datablocks
+			 * Walk over the PBF datablocks and add information about them to
+			 *		the worklists that will be handed to worker threads
+			 *
+			 * @param [out] 	pWorklists		The worklists that need to be populated
+			 * @param [in]		numWorklists	Number of entries in the worklists array
 			 */
-			void findDatablocks();
+			void generateDatablockWorklists(
+				boost::shared_array<DatablockWorklist> pWorklists,
+				const unsigned int 	numWorklists );
 
 			~PbfReader();
 
@@ -39,3 +50,5 @@ namespace osmpbf2apidb
 			) const;
 	};
 }
+
+#endif // _PBFREADER_HPP

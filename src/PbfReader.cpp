@@ -7,15 +7,16 @@
 #include <cstdint>
 #include <string>
 #include <netinet/in.h>
+#include <boost/shared_array.hpp>
 #include <osmpbf/osmpbf.h>
 #include "PbfReader.hpp"
-
+#include "DatablockWorklist.hpp"
 
 namespace osmpbf2apidb
 {
 	PbfReader::PbfReader(const std::string& pbfFilename ):
 		m_pbfFileSizeInBytes(0),
-		m_pMemoryMappedBuffer(NULL)
+		m_pMemoryMappedBuffer(nullptr)
 	{
 		// Open file
 		int fd = -1;
@@ -50,7 +51,9 @@ namespace osmpbf2apidb
 		std::cout << "Bytes in file: " << getFileSizeInBytes() << std::endl;
 	}
 
-	void PbfReader::findDatablocks()
+	void PbfReader::generateDatablockWorklists(
+		boost::shared_array<DatablockWorklist>    pWorklists,
+		const unsigned int	                     numWorklists )
 	{
 		char* 		pCurrentBufferCursor = m_pMemoryMappedBuffer;
 		uint32_t* 	pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
@@ -78,6 +81,8 @@ namespace osmpbf2apidb
 
 		// fast forward past header
 		pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+
+      unsigned int currWorklist = 0;
 
 		// Iterate over datablocks
 		while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
@@ -110,6 +115,22 @@ namespace osmpbf2apidb
 				throw( "Unknown datablock type \"" + blobHeader.type() + "\"" );
 			}
 
+         const DatablockWorklist::CompressedDatablock newDatablock = { 
+            pCurrentBufferCursor + ntohl(*pBlobHeaderLength),     // Starting byte of payload
+            pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1,
+            blobHeader.datasize()
+         };
+
+         pWorklists[currWorklist].addDatablock(newDatablock);
+
+         std::cout << "\tAdded datablock from offset 0x" << std::hex <<
+            _calculateFileOffset(newDatablock.pByteStart) << " to 0x" <<
+            _calculateFileOffset(newDatablock.pByteEnd) << " (" <<
+            std::dec << newDatablock.sizeInBytes << " bytes) to worklist " std::endl;
+         
+         // Update current worklist, wrapping back to zero if we've hit the last one
+         currWorklist = (currWorklist + 1) % numWorklists;
+
 			std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex << 
 				_calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: " 
 				<< std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl << "\tPayload: " 
@@ -125,7 +146,7 @@ namespace osmpbf2apidb
 	PbfReader::~PbfReader()
 	{
 		munmap( m_pMemoryMappedBuffer, m_pbfFileSizeInBytes );
-		m_pMemoryMappedBuffer = NULL;
+		m_pMemoryMappedBuffer = nullptr;
 		m_pbfFileSizeInBytes = 0;
 	}
 
