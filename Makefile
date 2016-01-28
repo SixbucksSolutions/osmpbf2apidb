@@ -1,7 +1,8 @@
 CC=ccache g++
 CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD
-LD=ccache g++
-LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf -o bin/osmpbf2pgsql
+LD=ccache g++ 
+LDFLAGS=
+LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf 
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 
