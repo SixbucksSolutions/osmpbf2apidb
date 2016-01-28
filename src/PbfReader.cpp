@@ -9,9 +9,11 @@
 #include <string>
 #include <cstring>
 #include <list>
+#include <vector>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
+#include <utf8.h>
 #include <osmpbf/osmpbf.h>
 #include <zlib.h>
 #include "PbfReader.hpp"
@@ -199,12 +201,13 @@ namespace osmpbf2apidb
             throw ( "Could not decode decompressed data to primitive block" );
         }
 
-        std::cout << "\tSuccessfully decoded primitive block" << std::endl;
-
-
-
+        // Don't need buffer anymore, been parsed into object
         delete [] pDecompressedPayload;
         pDecompressedPayload = nullptr;
+
+        std::cout << "\tSuccessfully decoded primitive block" << std::endl;
+
+        _processOsmPrimitiveBlock(primitiveBlock);
 
         std::list<int> myList;
 
@@ -252,5 +255,53 @@ namespace osmpbf2apidb
         {
             throw ( "Not at end of stream when we bailed out" );
         }
+    }
+
+    void PbfReader::_processOsmPrimitiveBlock(
+        const OSMPBF::PrimitiveBlock&   primitiveBlock )
+    {
+        // NOTE: strings are stored in PBF in UTF8, we store in UTF16 internally,
+        //      serializing out to UTF8 again on the way out
+        const std::vector<Utf16String> stringList =
+            _generateStringList( primitiveBlock );
+    }
+
+    std::vector<Utf16String> PbfReader::_generateStringList(
+        const OSMPBF::PrimitiveBlock&   primitiveBlock )
+    {
+        const OSMPBF::StringTable& st = primitiveBlock.stringtable();
+
+        // Can reserve exact space needed for vector up front
+        const unsigned int numStrings = st.s_size();
+
+        std::cout << "Number of strings in table: " <<
+                  boost::lexical_cast<std::string>(numStrings) << std::endl;
+
+        // *** IMPORTANT NOTE ***
+        //      PBF Strings are in UTF-8, we convert to UTF-16 internally,
+        //      then serialize back out to UTF-8 on the way out
+        std::vector<Utf16String> stringList(numStrings);
+
+        Utf16String utf16String;
+
+        for ( unsigned int i = 0; i < numStrings; ++i )
+        {
+            const std::string currString = st.s().Get(i);
+
+            utf16String.clear();
+
+            try
+            {
+                utf16String.setFromUtf8Bytes(currString);
+            }
+            catch ( utf8::invalid_utf8 const& e )
+            {
+                throw ( "String from string table contained invalid UTF-8 sequence" );
+            }
+
+            stringList.push_back(utf16String);
+        }
+
+        return stringList;
     }
 }

@@ -1,5 +1,6 @@
 Install OSM-Binary dependencies
-	sudo apt-get install -y libprotobuf-dev protobuf-compiler zlib1g-dev libboost-dev ccache astyle
+	sudo apt-get install -y libprotobuf-dev protobuf-compiler zlib1g-dev libboost-dev ccache astyle \
+		libutfcpp-dev
 
 	
 Download OSM-Binary (libosmpbf)

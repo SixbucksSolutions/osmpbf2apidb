@@ -7,6 +7,7 @@
 #include <boost/shared_array.hpp>
 #include <osmpbf/osmpbf.h>
 #include "DatablockWorklist.hpp"
+#include "Utf16String.hpp"
 
 namespace osmpbf2apidb
 {
@@ -63,6 +64,14 @@ namespace osmpbf2apidb
             void            _inflateCompressedPayload(
                 const OSMPBF::Blob& currDataPayload,
                 unsigned char*      pInflateBuffer
+            );
+
+            void            _processOsmPrimitiveBlock(
+                const OSMPBF::PrimitiveBlock&   primitiveBlock
+            );
+
+            std::vector<Utf16String> _generateStringList(
+                const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
     };
 }
