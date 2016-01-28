@@ -1,7 +1,7 @@
 #include <string>
 #include <cstdint>
 
-namespace osmpbf2pgsql 
+namespace osmpbf2apidb
 {
 	class PbfReader
 	{

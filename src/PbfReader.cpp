@@ -11,7 +11,7 @@
 #include "PbfReader.hpp"
 
 
-namespace osmpbf2pgsql
+namespace osmpbf2apidb
 {
 	PbfReader::PbfReader(const std::string& pbfFilename ):
 		m_pbfFileSizeInBytes(0),
