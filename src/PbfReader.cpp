@@ -20,8 +20,7 @@ namespace osmpbf2pgsql
 {
 	PbfReader::PbfReader(const std::string& pbfFilename ):
 		m_pbfFileSizeInBytes(0),
-		m_pMemoryMappedBuffer(NULL),
-		m_pbfInputStream()
+		m_pMemoryMappedBuffer(NULL)
 	{
 		// Open file
 		int fd = -1;

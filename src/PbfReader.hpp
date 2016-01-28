@@ -35,6 +35,5 @@ namespace osmpbf2pgsql
 
 			std::uint64_t                                                     	m_pbfFileSizeInBytes;
 			void*																						m_pMemoryMappedBuffer;
-			::boost::shared_ptr< ::google::protobuf::io::ZeroCopyInputStream >	m_pbfInputStream;
 	};
 }
