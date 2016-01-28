@@ -1,7 +1,5 @@
 #include <string>
 #include <cstdint>
-#include <boost/shared_ptr.hpp>
-#include <google/protobuf/io/zero_copy_stream.h>
 
 namespace osmpbf2pgsql 
 {

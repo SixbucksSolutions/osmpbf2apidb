@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -6,14 +7,8 @@
 #include <cstdint>
 #include <string>
 #include <netinet/in.h>
-#include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/lexical_cast.hpp>
-#include <google/protobuf/io/zero_copy_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+#include <osmpbf/osmpbf.h>
 #include "PbfReader.hpp"
-#include "fileformat.pb.h"
-#include "osmformat.pb.h"
 
 
 namespace osmpbf2pgsql
