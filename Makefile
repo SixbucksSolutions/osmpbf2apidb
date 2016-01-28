@@ -5,12 +5,15 @@ LDFLAGS=
 LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf 
 CPP_FILES := $(wildcard src/*.cpp)
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+ASTYLE=astyle
+ASTYLE_FLAGS=--options=astyle.cfg 
 
 bin/osmpbf2pgsql : $(OBJ_FILES)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LD_LIBS)
 
 obj/%.o : src/%.cpp 
-	$(CC) $(CPPFLAGS) -c -o $@ $<
+	$(ASTYLE) $(ASTYLE_FLAGS) $< $(<:.cpp=.hpp)
+	$(CC) $(CPPFLAGS) -c $< -o $@ 
 
 clean :
 	rm -f obj/* bin/*
