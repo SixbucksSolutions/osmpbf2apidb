@@ -4,10 +4,13 @@
 #include <string>
 #include <cstdint>
 #include <list>
+#include <vector>
 #include <boost/shared_array.hpp>
+#include <boost/shared_ptr.hpp>
 #include <osmpbf/osmpbf.h>
 #include "DatablockWorklist.hpp"
 #include "Utf16String.hpp"
+#include "OsmEntityPrimitive.hpp"
 
 namespace osmpbf2apidb
 {
@@ -54,8 +57,9 @@ namespace osmpbf2apidb
 
         private:
 
-            std::uint64_t   m_pbfFileSizeInBytes;
-            char*           m_pMemoryMappedBuffer;
+            std::uint64_t                                       m_pbfFileSizeInBytes;
+            char*                                               m_pMemoryMappedBuffer;
+            std::vector<boost::shared_ptr<OsmEntityPrimitive>>  m_createdOsmElements;
 
             std::uint64_t       _calculateFileOffset(
                 char const* const  pFilePtr
@@ -71,6 +75,11 @@ namespace osmpbf2apidb
             );
 
             std::vector<Utf16String> _generateStringList(
+                const OSMPBF::PrimitiveBlock&   primitiveBlock
+            );
+
+            void _processDenseNodes(
+                const OSMPBF::DenseNodes&       denseNodes,
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
     };

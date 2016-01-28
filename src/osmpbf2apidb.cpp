@@ -88,28 +88,43 @@ void processWorklist(
     osmpbf2apidb::DatablockWorklist&    worklist,
     osmpbf2apidb::PbfReader&            pbfReader )
 {
-    std::cout << "Worker thread " <<
-              boost::lexical_cast<std::string>(workerId) << " started!" <<
-              std::endl;
-
-    while ( worklist.empty() == false )
+    try
     {
+        std::cout << "Worker thread " <<
+                  boost::lexical_cast<std::string>(workerId) << " started!" <<
+                  std::endl;
 
-        // Get next chunk of work
-        osmpbf2apidb::DatablockWorklist::CompressedDatablock currBlock =
-            worklist.getNextDatablock();
+        while ( worklist.empty() == false )
+        {
+
+            // Get next chunk of work
+            osmpbf2apidb::DatablockWorklist::CompressedDatablock currBlock =
+                worklist.getNextDatablock();
+
+            std::cout << "Worker thread " <<
+                      boost::lexical_cast<std::string>(workerId) <<
+                      " working datablock starting at offset 0x" << std::hex <<
+                      currBlock.offsetStart << std::endl;
+
+            // Hand offsets to PBF reader, get a set of OSM entities back that we can work with
+            pbfReader.getOsmEntitiesFromCompressedDatablock( currBlock );
+        }
+
 
         std::cout << "Worker thread " <<
                   boost::lexical_cast<std::string>(workerId) <<
-                  " working datablock starting at offset 0x" << std::hex <<
-                  currBlock.offsetStart << std::endl;
-
-        // Hand offsets to PBF reader, get a set of OSM entities back that we can work with
-        pbfReader.getOsmEntitiesFromCompressedDatablock( currBlock );
+                  " terminating normally!" << std::endl;
     }
-
-
-    std::cout << "Worker thread " <<
-              boost::lexical_cast<std::string>(workerId) <<
-              " terminating normally!" << std::endl;
+    catch ( std::string const&      e )
+    {
+        std::cerr << "Worker thread threw exception: " << e << std::endl;
+    }
+    catch ( char const*    e )
+    {
+        std::cerr << "Worker thread threw exception: " << e << std::endl;
+    }
+    catch ( ... )
+    {
+        std::cerr << "Worker thread threw unknown exception" << std::endl;
+    }
 }

@@ -18,12 +18,14 @@
 #include <zlib.h>
 #include "PbfReader.hpp"
 #include "DatablockWorklist.hpp"
+#include "OsmEntityPrimitive.hpp"
 
 namespace osmpbf2apidb
 {
     PbfReader::PbfReader(const std::string& pbfFilename ):
         m_pbfFileSizeInBytes(0),
-        m_pMemoryMappedBuffer(nullptr)
+        m_pMemoryMappedBuffer(nullptr),
+        m_createdOsmElements()
     {
         // Open file
         int fd = -1;
@@ -264,6 +266,81 @@ namespace osmpbf2apidb
         //      serializing out to UTF8 again on the way out
         const std::vector<Utf16String> stringList =
             _generateStringList( primitiveBlock );
+
+        /*
+         * Per PBF spec, the primitive group will have all its elements in the same
+         *  datatype (five possible: Nodes, DenseNodes, Way, Relation, Changeset)
+         *
+         * Location: http://wiki.openstreetmap.org/wiki/PBF_Format
+         * Retrived: 2016-01-28
+         *
+         * "A PrimitiveGroup MUST NEVER contain different types of objects. So either it contains many Node messages,
+         * or a DenseNode message, or many Way messages, or many Relation messages, or many ChangeSet messages. But it
+         * can never contain any mixture of those."
+         */
+
+        std::cout << "\tPrimitive block contains " <<
+                  boost::lexical_cast<std::string>(primitiveBlock.primitivegroup().size()) <<
+                  " primitive groups" << std::endl;
+
+        // Iterate over all the primtivegroups in the block
+        for ( int primitiveGroupIndex = 0;
+                primitiveGroupIndex < primitiveBlock.primitivegroup().size();
+                ++primitiveGroupIndex )
+        {
+            const OSMPBF::PrimitiveGroup& primitiveGroup =
+                primitiveBlock.primitivegroup().Get(primitiveGroupIndex);
+
+            if ( primitiveGroup.nodes_size() > 0 )
+            {
+                std::cout << "\tPrimitive group " <<
+                          boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
+                          " contains (regular) node entries" << std::endl;
+
+                throw ( "Nodes not implemented yet" );
+
+            }
+            else if ( primitiveGroup.has_dense() == true )
+            {
+                std::cout << "\tPrimitive group " <<
+                          boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
+                          " contains dense node entries" << std::endl;
+
+                _processDenseNodes( primitiveGroup.dense(), primitiveBlock );
+            }
+            else if ( primitiveGroup.ways_size() > 0 )
+            {
+                std::cout << "\tPrimitive group " <<
+                          boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
+                          " contains way entries" << std::endl;
+
+                throw ( "Ways not implemented yet" );
+
+            }
+            else if ( primitiveGroup.relations_size() > 0 )
+            {
+                std::cout << "\tPrimitive group " <<
+                          boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
+                          " contains relation entries" << std::endl;
+
+                throw ( "Relations not implemented yet" );
+            }
+            else if ( primitiveGroup.changesets_size() > 0 )
+            {
+                std::cout << "\tPrimitive group " <<
+                          boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
+                          " contains changeset entries" <<
+                          std::endl;
+
+                throw ( "Never seen changesets in any PBF files to date, no code to handle" );
+            }
+            else
+            {
+                throw ( "We read a primitive group, but it doesn't contain any entries in any of the valid types" );
+            }
+
+            //break;
+        }
     }
 
     std::vector<Utf16String> PbfReader::_generateStringList(
@@ -274,7 +351,7 @@ namespace osmpbf2apidb
         // Can reserve exact space needed for vector up front
         const unsigned int numStrings = st.s_size();
 
-        std::cout << "Number of strings in table: " <<
+        std::cout << "\tNumber string table entries: " <<
                   boost::lexical_cast<std::string>(numStrings) << std::endl;
 
         // *** IMPORTANT NOTE ***
@@ -303,5 +380,24 @@ namespace osmpbf2apidb
         }
 
         return stringList;
+    }
+
+    void PbfReader::_processDenseNodes(
+        const OSMPBF::DenseNodes&       denseNodes,
+        const OSMPBF::PrimitiveBlock&   primitiveBlock )
+    {
+        // Need id, lat, lon parallel lists to be the same size as data isn't sane without it
+        const int listSize = denseNodes.id_size();
+
+        if ( (denseNodes.lat_size() != listSize) ||
+                (denseNodes.lon_size() != listSize) )
+        {
+            throw ( "Found dense node entry with unbalanced list sizes" );
+        }
+
+        // Request change in capacity for list of generated elements
+        m_createdOsmElements.reserve( m_createdOsmElements.size() + listSize );
+
+
     }
 }
