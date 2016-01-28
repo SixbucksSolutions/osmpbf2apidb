@@ -27,7 +27,7 @@ int main(
 		exit(-1);
 	}
 
-	std::cout << "Reader for " << pbfFilename << " successfully created!" << std::endl;
+	//std::cout << "Reader for " << pbfFilename << " successfully created!" << std::endl;
 
 	pbfReader->findDatablocks();
 }

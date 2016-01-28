@@ -32,10 +32,11 @@ namespace osmpbf2pgsql
 		}
 		m_pbfFileSizeInBytes = sb.st_size;
 
-		std::cout << "File is " << m_pbfFileSizeInBytes << " bytes long" << std::endl;
+		//std::cout << "File is " << m_pbfFileSizeInBytes << " bytes long" << std::endl;
 
 		// Memmap file into our program's address space
-		if ( (m_pMemoryMappedBuffer = mmap(0, m_pbfFileSizeInBytes, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED )
+		if ( (m_pMemoryMappedBuffer = reinterpret_cast<char*>(
+			mmap(0, m_pbfFileSizeInBytes, PROT_READ, MAP_SHARED, fd, 0))) == MAP_FAILED )
 		{
 			throw( "Could not mmap " + pbfFilename );
 		}
@@ -51,25 +52,74 @@ namespace osmpbf2pgsql
 
 	void PbfReader::findDatablocks()
 	{
-		char* 		pCurrentBufferOffset = reinterpret_cast<char*>(m_pMemoryMappedBuffer);
-		uint32_t* 	pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferOffset);
+		char* 		pCurrentBufferCursor = m_pMemoryMappedBuffer;
+		uint32_t* 	pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
 
  		// Find out how many bytes in the blob header
-		std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
+		//std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
 
 		// Move pointer to next piece of data
-		pCurrentBufferOffset += sizeof(uint32_t);
+		pCurrentBufferCursor += sizeof(uint32_t);
 
 		// Read blobheader
 		OSMPBF::BlobHeader blobHeader;
-		if ( blobHeader.ParseFromArray(pCurrentBufferOffset, ntohl(*pBlobHeaderLength)) == false )
+		if ( blobHeader.ParseFromArray(pCurrentBufferCursor, ntohl(*pBlobHeaderLength)) == false )
 		{
 			throw( "Unable to parse blob header" );
 		}
 
-		std::cout << "Read blob header successfully!" << std::endl;
+		if ( blobHeader.type() != "OSMHeader" )
+		{
+			throw( "File did not start with an OSMHeader section" );
+		}
+		std::cout << std::endl << "OSM File Header (" << ntohl(*pBlobHeaderLength) << " bytes)" << std::endl;
+		std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
+		std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
 
+		// fast forward past header
+		pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
 
+		// Iterate over datablocks
+		while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
+		{
+			/*
+ 			std::cout << std::endl << std::endl << "Trying to read datablock starting at offset 0x" << std::hex <<
+            _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+			*/
+			
+			pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
+
+			// Move pointer to next piece of data (start of header data)
+			pCurrentBufferCursor += sizeof(uint32_t);
+
+			// Read blobheader
+			OSMPBF::BlobHeader blobHeader;
+
+			/*
+			std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
+				_calculateFileOffset(pCurrentBufferCursor) << std::endl;
+			*/
+
+			if ( blobHeader.ParseFromArray(pCurrentBufferCursor, ntohl(*pBlobHeaderLength)) == false )
+			{
+				throw( "Unable to parse section header" );
+			}
+
+			if ( blobHeader.type() != "OSMData" )
+			{
+				throw( "Unknown datablock type \"" + blobHeader.type() + "\"" );
+			}
+
+			std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex << 
+				_calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: " 
+				<< std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl << "\tPayload: " 
+				<< blobHeader.datasize() << " bytes" << std::endl;
+
+			pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+		}
+
+		std::cout << std::endl << std::endl << "Stopped reading at offset 0x" 
+			<< std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
 	}
 
 	PbfReader::~PbfReader()
@@ -82,5 +132,11 @@ namespace osmpbf2pgsql
 	std::uint64_t PbfReader::getFileSizeInBytes() const
 	{
 		return m_pbfFileSizeInBytes;
+	}
+
+	std::uint64_t PbfReader::_calculateFileOffset(
+   	char const * const   pFilePtr) const
+	{
+		return (pFilePtr - m_pMemoryMappedBuffer);
 	}
 }

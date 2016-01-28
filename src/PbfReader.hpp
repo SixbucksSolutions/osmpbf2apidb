@@ -32,6 +32,10 @@ namespace osmpbf2pgsql
 		private:
 
 			std::uint64_t                                                     	m_pbfFileSizeInBytes;
-			void*																						m_pMemoryMappedBuffer;
+			char*																						m_pMemoryMappedBuffer;
+
+			std::uint64_t		_calculateFileOffset(
+				char const * const	pFilePtr 
+			) const;
 	};
 }
