@@ -29,5 +29,5 @@ int main(
 
 	std::cout << "Reader for " << pbfFilename << " successfully created!" << std::endl;
 
-	pbfReader->readHeader();
+	pbfReader->findDatablocks();
 }
