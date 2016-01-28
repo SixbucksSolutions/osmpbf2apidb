@@ -69,6 +69,16 @@ int main(
         std::cerr << "Error processing PBF data: " << e << std::endl;
         return -1;
     }
+    catch ( const char* e )
+    {
+        std::cerr << "Error processing PBF Data: " << e << std::endl;
+        return -1;
+    }
+    catch ( ... )
+    {
+        std::cerr << "Unhandled exception" << std::endl;
+        return -1;
+    }
 
     return 0;
 }

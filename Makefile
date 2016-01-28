@@ -16,6 +16,6 @@ obj/%.o : src/%.cpp
 	$(CC) $(CPPFLAGS) -c $< -o $@ 
 
 clean :
-	rm -f obj/* bin/*
+	rm -f obj/*.o bin/*
 
 -include $(OBJFILES:.o=.d)

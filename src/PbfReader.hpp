@@ -62,7 +62,7 @@ namespace osmpbf2apidb
 
             void            _inflateCompressedPayload(
                 const OSMPBF::Blob& currDataPayload,
-                char*               pInflateBuffer
+                unsigned char*      pInflateBuffer
             );
     };
 }

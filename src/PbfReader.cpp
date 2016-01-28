@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <cstring>
 #include <list>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
@@ -182,10 +183,25 @@ namespace osmpbf2apidb
                   boost::lexical_cast<std::string>(inflatedSize) <<
                   std::endl;
 
-        char* pDecompressedPayload = new char[inflatedSize];
+        unsigned char* pDecompressedPayload = new unsigned char[inflatedSize];
+
+        ::std::memset( pDecompressedPayload, 0, inflatedSize);
 
         _inflateCompressedPayload( currDataPayload,
                                    pDecompressedPayload );
+
+        // Now need to convert decompressed data to a primitive block
+        OSMPBF::PrimitiveBlock primitiveBlock;
+
+        if ( primitiveBlock.ParseFromArray(pDecompressedPayload, inflatedSize) ==
+                false )
+        {
+            throw ( "Could not decode decompressed data to primitive block" );
+        }
+
+        std::cout << "\tSuccessfully decoded primitive block" << std::endl;
+
+
 
         delete [] pDecompressedPayload;
         pDecompressedPayload = nullptr;
@@ -215,11 +231,26 @@ namespace osmpbf2apidb
 
     void PbfReader::_inflateCompressedPayload(
         const OSMPBF::Blob&     currDataPayload,
-        char*                   pInflateBuffer )
+        unsigned char*          pInflateBuffer )
     {
         const std::size_t inflatedSize = currDataPayload.raw_size();
 
-        // Zlib object to perform inflate
-        z_stream        zStream;
+        // Leverage zlib to perform inflate
+        z_stream        zlibStream;
+        zlibStream.zalloc   = Z_NULL;
+        zlibStream.zfree    = Z_NULL;
+        zlibStream.opaque   = Z_NULL;
+        inflateInit(&zlibStream);
+        zlibStream.next_in = (Bytef*)currDataPayload.zlib_data().data();
+        zlibStream.avail_in = currDataPayload.zlib_data().size();
+        zlibStream.avail_out = inflatedSize;
+        zlibStream.next_out = pInflateBuffer;
+        const int inflateResult = inflate(&zlibStream, Z_NO_FLUSH);
+        inflateEnd(&zlibStream);
+
+        if ( inflateResult != Z_STREAM_END )
+        {
+            throw ( "Not at end of stream when we bailed out" );
+        }
     }
 }
