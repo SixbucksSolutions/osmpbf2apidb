@@ -1,8 +1,7 @@
-#include <iosfwd>		// Forward declarations of IO stream functions
-#include <fstream>
 #include <string>
 #include <cstdint>
 #include <boost/shared_ptr.hpp>
+#include <google/protobuf/io/zero_copy_stream.h>
 
 namespace osmpbf2pgsql 
 {
@@ -33,23 +32,9 @@ namespace osmpbf2pgsql
 			~PbfReader();
 
 		private:
-			std::ifstream 		m_pbfInput;
-			std::uint64_t 		m_pbfFileSizeInBytes;	
 
-			/**
-			 * Read a uint32_t from current file pointer location
-			 *
-			 * @return NETWORK-byte order uint32_t
-			 */
-			std::uint32_t _readUint32();
-
-			/**
-			 * Make sure there's room in the file for the read we're about to do
-			 *
-			 * Throws exception if not enough bytes remain
-			 */
-			void _verifySpaceInFile(
-				const std::uint64_t 	bytesToRead
-			);
+			std::uint64_t                                                     	m_pbfFileSizeInBytes;
+			void*																						m_pMemoryMappedBuffer;
+			::boost::shared_ptr< ::google::protobuf::io::ZeroCopyInputStream >	m_pbfInputStream;
 	};
 }

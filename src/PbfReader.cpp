@@ -1,82 +1,92 @@
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include <cstdint>
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <netinet/in.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/lexical_cast.hpp>
-#include <osmpbf/osmpbf.h>
+#include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 #include "PbfReader.hpp"
+#include "fileformat.pb.h"
+#include "osmformat.pb.h"
 
 
 namespace osmpbf2pgsql
 {
 	PbfReader::PbfReader(const std::string& pbfFilename ):
-		m_pbfInput(pbfFilename, std::ios::binary),
-		m_pbfFileSizeInBytes(0)
+		m_pbfFileSizeInBytes(0),
+		m_pMemoryMappedBuffer(NULL),
+		m_pbfInputStream()
 	{
-		if ( m_pbfInput.good() == false )
+		// Open file
+		int fd = -1;
+		if ( (fd = open( pbfFilename.c_str(), O_RDONLY) ) == -1 )
 		{
-			throw( "Could not open PBF file " + pbfFilename );
+			throw( "Could not open" + pbfFilename );
 		}
 
-		m_pbfInput.seekg(0, m_pbfInput.end);
-		m_pbfFileSizeInBytes = m_pbfInput.tellg();
-		m_pbfInput.seekg(0, m_pbfInput.beg);
+		// Run stat to get filesize
+		struct stat sb;
+		if ( fstat(fd, &sb) == -1 )
+		{
+			throw("Could not run fstat on " + pbfFilename );
+		}
+		m_pbfFileSizeInBytes = sb.st_size;
+
+		std::cout << "File is " << m_pbfFileSizeInBytes << " bytes long" << std::endl;
+
+		// Memmap file into our program's address space
+		if ( (m_pMemoryMappedBuffer = mmap(0, m_pbfFileSizeInBytes, PROT_READ, MAP_SHARED, fd, 0)) == MAP_FAILED )
+		{
+			throw( "Could not mmap " + pbfFilename );
+		}
+
+		// Can close file descriptor, not needed anymore that file is in our address space
+		if ( close(fd) == -1 ) 
+		{
+			throw( "Could not close file descriptor after mapping file" );
+		}
 
 		std::cout << "Bytes in file: " << getFileSizeInBytes() << std::endl;
 	}
 
 	void PbfReader::findDatablocks()
 	{
-		m_pbfInput.seekg(0, m_pbfInput.beg);
+		char* 		pCurrentBufferOffset = reinterpret_cast<char*>(m_pMemoryMappedBuffer);
+		uint32_t* 	pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferOffset);
 
-		const uint32_t currPos = m_pbfInput.tellg();
-		while ( (m_pbfInput.eof() == false) && (currPos < m_pbfFileSizeInBytes) )
+ 		// Find out how many bytes in the blob header
+		std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
+
+		// Move pointer to next piece of data
+		pCurrentBufferOffset += sizeof(uint32_t);
+
+		// Read blobheader
+		OSMPBF::BlobHeader blobHeader;
+		if ( blobHeader.ParseFromArray(pCurrentBufferOffset, ntohl(*pBlobHeaderLength)) == false )
 		{
-			// Read four bytes of datablock type
-			const uint32_t datablockType = _readUint32();
-			std::cout << "Fileblock type: " << ntohl(datablockType) << std::endl;
-			
-			// Read blobheader
-			OSMPBF::BlobHeader myHeader;
-
-			break;
+			throw( "Unable to parse blob header" );
 		}
+
+		std::cout << "Read blob header successfully!" << std::endl;
+
+
 	}
 
 	PbfReader::~PbfReader()
 	{
-		m_pbfInput.close();
+		munmap( m_pMemoryMappedBuffer, m_pbfFileSizeInBytes );
+		m_pMemoryMappedBuffer = NULL;
 		m_pbfFileSizeInBytes = 0;
 	}
 
 	std::uint64_t PbfReader::getFileSizeInBytes() const
 	{
 		return m_pbfFileSizeInBytes;
-	}
-
-	std::uint32_t PbfReader::_readUint32()
-	{
-		uint32_t dataRead;
-		const int bytesToRead = sizeof(uint32_t);
-		_verifySpaceInFile(bytesToRead);
-	   m_pbfInput.read((char*)&dataRead, bytesToRead);
-
-		if ( !m_pbfInput  )
-		{
-			throw( "Unable to read requested " + boost::lexical_cast<std::string>(bytesToRead) + " from input file" );
-		}
-
-		return dataRead;
-	}
-
-	void PbfReader::_verifySpaceInFile(
-		const std::uint64_t 	bytesToRead )
-	{
-		if ( (getFileSizeInBytes() - m_pbfInput.tellg() + 1) < bytesToRead )
-		{
-			throw( "Not enough space to read " + boost::lexical_cast<std::string>(bytesToRead) + " bytes from input file" );
-		}
 	}
 }
