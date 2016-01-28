@@ -19,6 +19,7 @@
 #include "PbfReader.hpp"
 #include "DatablockWorklist.hpp"
 #include "OsmEntityPrimitive.hpp"
+#include "LonLatCoordinate.hpp"
 
 namespace osmpbf2apidb
 {
@@ -398,6 +399,15 @@ namespace osmpbf2apidb
         // Request change in capacity for list of generated elements
         m_createdOsmElements.reserve( m_createdOsmElements.size() + listSize );
 
+        // Uses delta encoding (only stores difference in id/location from previous node to save space with
+        //      variable-length integers)
+        LonLatCoordinate    lonLat(0, 0);
+        std::int64_t        id(0);
 
+        for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
+        {
+
+
+        }
     }
 }
