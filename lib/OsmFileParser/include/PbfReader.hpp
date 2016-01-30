@@ -7,7 +7,7 @@
 #include <osmpbf/osmpbf.h>
 #include "Utf16String.hpp"
 #include "Node.hpp"
-#include "../src/DatablockWorklist.hpp"
+#include "DatablockWorklist.hpp"
 
 namespace OsmFileParser
 {
@@ -62,21 +62,14 @@ namespace OsmFileParser
                 const unsigned int numberOfWorkerThreads
             );
 
-            /**
-             * Given a starting offset and number of bytes, decompress and decode the data in that block, handing
-             *  the caller back a set of OSM entities (i.e., Node, Way, Relations) that they can do something with
-             *
-             * @param [in]  compressedData  Information about block to process
-             */
-            /*
-            std::list<int> getOsmEntitiesFromCompressedDatablock(
-                const DatablockWorklist::CompressedDatablock&   compressedData );
-            */
-
         private:
 
-            std::uint64_t                                       m_pbfFileSizeInBytes;
-            char*                                               m_pMemoryMappedBuffer;
+            std::uint64_t   m_pbfFileSizeInBytes;
+            char*           m_pMemoryMappedBuffer;
+
+            std::function < void(
+                const OsmFileParser::OsmPrimitive::Node&,
+                const unsigned int) >   m_nodeCallback;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename
@@ -94,9 +87,18 @@ namespace OsmFileParser
              *
              * @return Specified number of worklists
              */
-            const std::vector<DatablockWorklist> _generateDatablockWorklists(
+            std::vector<DatablockWorklist> _generateDatablockWorklists(
                 const unsigned int  numWorklists
             );
+
+            /**
+             * Given a starting offset and number of bytes, decompress and decode the data in that block, handing
+             *  the caller back a set of OSM entities (i.e., Node, Way, Relations) that they can do something with
+             *
+             * @param [in]  compressedData  Information about block to process
+             */
+            void _parseCompressedDatablock(
+                const DatablockWorklist::CompressedDatablock&   compressedData );
 
             void            _inflateCompressedPayload(
                 const OSMPBF::Blob& currDataPayload,
@@ -115,6 +117,12 @@ namespace OsmFileParser
                 const OSMPBF::DenseNodes&       denseNodes,
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
+
+            void _processWorklist(
+                const unsigned int  workerId,
+                DatablockWorklist&  worklist
+            );
+
     };
 }
 

@@ -10,6 +10,9 @@
 #include <cstring>
 #include <list>
 #include <vector>
+#include <algorithm>
+#include <iterator>
+#include <thread>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
@@ -24,36 +27,56 @@ namespace OsmFileParser
 {
     PbfReader::PbfReader():
         m_pbfFileSizeInBytes(0),
-        m_pMemoryMappedBuffer(nullptr)
+        m_pMemoryMappedBuffer(nullptr),
+        m_nodeCallback()
     {
-		;
-	}
+        ;
+    }
 
-	void PbfReader::parse(
-    	const std::string&  pbfFilename,
-		std::function< void(
-			const OsmFileParser::OsmPrimitive::Node&,
-			const unsigned int) > nodeCallback )
-	{
-		// Without number of workers specified, use one worker thread
-		parse(pbfFilename, nodeCallback, 1);
-	}
+    void PbfReader::parse(
+        const std::string&  pbfFilename,
+        std::function < void(
+            const OsmFileParser::OsmPrimitive::Node&,
+            const unsigned int) > nodeCallback )
+    {
+        // Without number of workers specified, use one worker thread
+        parse(pbfFilename, nodeCallback, 1);
+    }
 
     void PbfReader::parse(
         const std::string&  pbfFilename,
 
-        std::function< void(
+        std::function < void(
             const OsmFileParser::OsmPrimitive::Node&,
             const unsigned int) > nodeCallback,
 
-		const unsigned int /*numberOfWorkerThreads*/ )
-	{
-		_memoryMapPbfFile(pbfFilename);
-	}
+        const unsigned int numberOfWorkerThreads )
+    {
+        _memoryMapPbfFile(pbfFilename);
 
-	void PbfReader::_memoryMapPbfFile(
-		const std::string&	pbfFilename )
-	{
+        std::vector<DatablockWorklist> worklists =
+            _generateDatablockWorklists(numberOfWorkerThreads);
+
+        std::vector<std::thread> workerThreads(numberOfWorkerThreads);
+
+        for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
+        {
+            /*
+            workerThreads[i] = std::thread(
+                _processWorklist, i, std::ref(worklists[i]));
+            */
+            _processWorklist(i, worklists[i]);
+        }
+
+        for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
+        {
+            workerThreads[i].join();
+        }
+    }
+
+    void PbfReader::_memoryMapPbfFile(
+        const std::string&  pbfFilename )
+    {
         // Open file
         int fd = -1;
 
@@ -87,160 +110,156 @@ namespace OsmFileParser
             throw ( "Could not close file descriptor after mapping file" );
         }
 
-        std::cout << "Memory map successful, file size: " << getFileSizeInBytes() << std::endl;
+        std::cout << "Memory map successful, file size: " << getFileSizeInBytes() <<
+                  std::endl;
     }
 
-    const std::vector<DatablockWorklist> PbfReader::generateDatablockWorklists(
-       const unsigned int                       numWorklists )
-	{
-		char*       pCurrentBufferCursor = m_pMemoryMappedBuffer;
-		uint32_t*   pBlobHeaderLength = 
-			reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
-		std::vector<DatablockWorklist> pWorklists(numWorklists);
-
-		// Find out how many bytes in the blob header
-		//std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
-
-		// Move pointer to next piece of data
-		pCurrentBufferCursor += sizeof(uint32_t);
-
-		// Read blobheader
-		OSMPBF::BlobHeader blobHeader;
-
-		if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
-					ntohl(*pBlobHeaderLength)) == false )
-		{
-			throw ( "Unable to parse blob header" );
-		}
-
-		if ( blobHeader.type() != "OSMHeader" )
-		{
-			throw ( "File did not start with an OSMHeader section" );
-		}
-
-		std::cout << std::endl << "OSM File Header (" << ntohl(
-					*pBlobHeaderLength) << " bytes)" << std::endl;
-		std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
-		std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
-
-		// fast forward past header
-		pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
-
-		unsigned int currWorklist = 0;
-
-		// Iterate over datablocks
-		while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
-		{
-			std::cout << std::endl << std::endl << "Trying to read datablock starting at offset 0x" << std::hex <<
-				_calculateFileOffset(pCurrentBufferCursor) << std::endl;
-
-			pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
-
-			// Move pointer to next piece of data (start of header data)
-			pCurrentBufferCursor += sizeof(uint32_t);
-
-			// Read blobheader
-			OSMPBF::BlobHeader blobHeader;
-
-			std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
-				_calculateFileOffset(pCurrentBufferCursor) << std::endl;
-
-			if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
-						ntohl(*pBlobHeaderLength)) == false )
-			{
-				throw ( "Unable to parse section header" );
-			}
-
-			if ( blobHeader.type() != "OSMData" )
-			{
-				throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
-			}
-
-			std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
-				_calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
-				<< std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
-				"\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
-
-			const DatablockWorklist::CompressedDatablock newDatablock =
-			{
-				_calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength)),     // start offset
-				_calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
-				blobHeader.datasize()
-			};
-
-			pWorklists[currWorklist].addDatablock(newDatablock);
-
-			std::cout << "\tAdded datablock from offset 0x" << std::hex <<
-				newDatablock.offsetStart << " to 0x" <<
-				newDatablock.offsetEnd << " (" <<
-				std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
-				boost::lexical_cast<std::string>(currWorklist) << std::endl;
-
-			// Update current worklist, wrapping back to zero if we've hit the last one
-			currWorklist = (currWorklist + 1) % numWorklists;
-
-			pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
-		}
-
-		std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
-			<< std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
-
-		return pWorklists;
-	}
-
-
-    /*
-       std::list<int> PbfReader::getOsmEntitiesFromCompressedDatablock(
-       const DatablockWorklist::CompressedDatablock&   compressedData )
-       {
-       OSMPBF::Blob currDataPayload;
-
-       if ( currDataPayload.ParseFromArray(m_pMemoryMappedBuffer +
-       compressedData.offsetStart, compressedData.sizeInBytes) ==
-       false )
-       {
-       throw ( "Could not read data payload" );
-       }
-
-       std::cout << "\tRead payload successfully!" << std::endl;
-
-       const std::size_t inflatedSize = currDataPayload.raw_size();
-
-       std::cout << "\tCompressed payload: " <<
-       boost::lexical_cast<std::string>(compressedData.sizeInBytes) <<
-       ", inflated data size: " <<
-       boost::lexical_cast<std::string>(inflatedSize) <<
-       std::endl;
-
-       unsigned char* pDecompressedPayload = new unsigned char[inflatedSize];
-
-       ::std::memset( pDecompressedPayload, 0, inflatedSize);
-
-       _inflateCompressedPayload( currDataPayload,
-       pDecompressedPayload );
-
-    // Now need to convert decompressed data to a primitive block
-    OSMPBF::PrimitiveBlock primitiveBlock;
-
-    if ( primitiveBlock.ParseFromArray(pDecompressedPayload, inflatedSize) ==
-    false )
+    std::vector<DatablockWorklist> PbfReader::_generateDatablockWorklists(
+        const unsigned int                       numWorklists )
     {
-    throw ( "Could not decode decompressed data to primitive block" );
+        char*       pCurrentBufferCursor = m_pMemoryMappedBuffer;
+        uint32_t*   pBlobHeaderLength =
+            reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
+        std::vector<DatablockWorklist> pWorklists(numWorklists);
+
+        // Find out how many bytes in the blob header
+        //std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
+
+        // Move pointer to next piece of data
+        pCurrentBufferCursor += sizeof(uint32_t);
+
+        // Read blobheader
+        OSMPBF::BlobHeader blobHeader;
+
+        if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
+                                       ntohl(*pBlobHeaderLength)) == false )
+        {
+            throw ( "Unable to parse blob header" );
+        }
+
+        if ( blobHeader.type() != "OSMHeader" )
+        {
+            throw ( "File did not start with an OSMHeader section" );
+        }
+
+        std::cout << std::endl << "OSM File Header (" << ntohl(
+                      *pBlobHeaderLength) << " bytes)" << std::endl;
+        std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
+        std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
+
+        // fast forward past header
+        pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+
+        unsigned int currWorklist = 0;
+
+        // Iterate over datablocks
+        while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
+        {
+            std::cout << std::endl << std::endl <<
+                      "Trying to read datablock starting at offset 0x" << std::hex <<
+                      _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+
+            pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
+
+            // Move pointer to next piece of data (start of header data)
+            pCurrentBufferCursor += sizeof(uint32_t);
+
+            // Read blobheader
+            OSMPBF::BlobHeader blobHeader;
+
+            std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
+                      _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+
+            if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
+                                           ntohl(*pBlobHeaderLength)) == false )
+            {
+                throw ( "Unable to parse section header" );
+            }
+
+            if ( blobHeader.type() != "OSMData" )
+            {
+                throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
+            }
+
+            std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
+                      _calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
+                      << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
+                      "\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
+
+            const DatablockWorklist::CompressedDatablock newDatablock =
+            {
+                _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength)),     // start offset
+                _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
+                blobHeader.datasize()
+            };
+
+            pWorklists[currWorklist].addDatablock(newDatablock);
+
+            std::cout << "\tAdded datablock from offset 0x" << std::hex <<
+                      newDatablock.offsetStart << " to 0x" <<
+                      newDatablock.offsetEnd << " (" <<
+                      std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
+                      boost::lexical_cast<std::string>(currWorklist) << std::endl;
+
+            // Update current worklist, wrapping back to zero if we've hit the last one
+            currWorklist = (currWorklist + 1) % numWorklists;
+
+            pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+        }
+
+        std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
+                  << std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+
+        return pWorklists;
     }
 
-    // Don't need buffer anymore, been parsed into object
-    delete [] pDecompressedPayload;
-    pDecompressedPayload = nullptr;
 
-    std::cout << "\tSuccessfully decoded primitive block" << std::endl;
+    void PbfReader::_parseCompressedDatablock(
+        const DatablockWorklist::CompressedDatablock&   compressedData )
+    {
+        OSMPBF::Blob currDataPayload;
 
-    _processOsmPrimitiveBlock(primitiveBlock);
+        if ( currDataPayload.ParseFromArray(m_pMemoryMappedBuffer +
+                                            compressedData.offsetStart, compressedData.sizeInBytes) ==
+                false )
+        {
+            throw ( "Could not read data payload" );
+        }
 
-    std::list<int> myList;
+        std::cout << "\tRead payload successfully!" << std::endl;
 
-    return myList;
+        const std::size_t inflatedSize = currDataPayload.raw_size();
+
+        std::cout << "\tCompressed payload: " <<
+                  boost::lexical_cast<std::string>(compressedData.sizeInBytes) <<
+                  ", inflated data size: " <<
+                  boost::lexical_cast<std::string>(inflatedSize) <<
+                  std::endl;
+
+        unsigned char* pDecompressedPayload = new unsigned char[inflatedSize];
+
+        ::std::memset( pDecompressedPayload, 0, inflatedSize);
+
+        _inflateCompressedPayload( currDataPayload,
+                                   pDecompressedPayload );
+
+        // Now need to convert decompressed data to a primitive block
+        OSMPBF::PrimitiveBlock primitiveBlock;
+
+        if ( primitiveBlock.ParseFromArray(pDecompressedPayload, inflatedSize) ==
+                false )
+        {
+            throw ( "Could not decode decompressed data to primitive block" );
+        }
+
+        // Don't need buffer anymore, been parsed into object
+        delete [] pDecompressedPayload;
+        pDecompressedPayload = nullptr;
+
+        std::cout << "\tSuccessfully decoded primitive block" << std::endl;
+
+        _processOsmPrimitiveBlock(primitiveBlock);
     }
-     */
 
     PbfReader::~PbfReader()
     {
@@ -435,4 +454,50 @@ namespace OsmFileParser
 
         }
     }
+
+    void PbfReader::_processWorklist(
+        const unsigned int  workerId,
+        DatablockWorklist&  worklist )
+    {
+        try
+        {
+            std::cout << "Worker thread " <<
+                      boost::lexical_cast<std::string>(workerId) << " started!" <<
+                      std::endl;
+
+            while ( worklist.empty() == false )
+            {
+
+                // Get next chunk of work
+                DatablockWorklist::CompressedDatablock currBlock =
+                    worklist.getNextDatablock();
+
+                std::cout << "Worker thread " <<
+                          boost::lexical_cast<std::string>(workerId) <<
+                          " working datablock starting at offset 0x" << std::hex <<
+                          currBlock.offsetStart << std::endl;
+
+                // Parse entities out of compressed block
+                _parseCompressedDatablock( currBlock );
+            }
+
+
+            std::cout << "Worker thread " <<
+                      boost::lexical_cast<std::string>(workerId) <<
+                      " terminating normally!" << std::endl;
+        }
+        catch ( std::string const&      e )
+        {
+            std::cerr << "Worker thread threw exception: " << e << std::endl;
+        }
+        catch ( char const*    e )
+        {
+            std::cerr << "Worker thread threw exception: " << e << std::endl;
+        }
+        catch ( ... )
+        {
+            std::cerr << "Worker thread threw unknown exception" << std::endl;
+        }
+    }
+
 }
