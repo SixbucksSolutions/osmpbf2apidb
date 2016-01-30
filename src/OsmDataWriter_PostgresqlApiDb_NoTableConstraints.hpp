@@ -1,11 +1,10 @@
 #ifndef _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS
 #define _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS
 
-#include "Node.hpp"
+#include "OsmFileParser/include/Node.hpp"
 
 namespace OsmDataWriter
 {
-
     namespace PostgresqlApiDb
     {
 
@@ -14,10 +13,11 @@ namespace OsmDataWriter
             public:
                 NoTableConstraints();
 
-                ~NoTableConstraints();
+                virtual ~NoTableConstraints() { }
 
-                static void pbfParserCallback(
-                    const ::OsmFileParser::OsmPrimitive::Node& node
+                void nodeCallback(
+                    const ::OsmFileParser::OsmPrimitive::Node& node,
+                    const unsigned int workerId
                 );
         };
 

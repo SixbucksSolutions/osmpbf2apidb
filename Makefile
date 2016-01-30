@@ -1,5 +1,5 @@
 CC=ccache g++
-CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD -Ilib/OsmFileParser/include
+CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD -Ilib
 LD=ccache g++ 
 LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf 
 CPP_FILES := $(wildcard src/*.cpp) 
