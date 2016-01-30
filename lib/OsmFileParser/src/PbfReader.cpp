@@ -509,7 +509,8 @@ namespace OsmFileParser
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
         {
             id                          += denseNodes.id().Get(coordIndex);
-            version                     += denseInfo.version().Get(coordIndex);
+            // Version is absolute value, not a delta
+            version                     = denseInfo.version().Get(coordIndex);
             timestamp                   += denseInfo.timestamp().Get(coordIndex);
             changesetId                 += denseInfo.changeset().Get(coordIndex);
             userId                      += denseInfo.uid().Get(coordIndex);

@@ -24,7 +24,7 @@ namespace OsmDataWriter
                 ::std::lock_guard<::std::mutex> lock( m_visitDataMutex );
                 ++m_nodesVisited;
 
-                if ( m_nodesVisited == 1 )
+                if ( (m_nodesVisited <= 5) || (m_nodesVisited > 17860) )
                 {
                     shouldPrint = true;
                 }
@@ -32,7 +32,7 @@ namespace OsmDataWriter
 
             if ( shouldPrint == true )
             {
-                std::cout << node.toString();
+                std::cout << std::endl << node.toString() << std::endl;
             }
         }
     }

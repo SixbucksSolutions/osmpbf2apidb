@@ -1,7 +1,9 @@
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
-#include <boost/date_time.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/format.hpp>
 #include "Primitive.hpp"
 
 namespace OsmFileParser
@@ -28,6 +30,19 @@ namespace OsmFileParser
 
         ::std::string Primitive::toString() const
         {
+            const ::boost::posix_time::ptime timestamp(
+                ::boost::posix_time::from_time_t(getTimestamp()) );
+
+            ::std::stringstream dateStringStream;
+            dateStringStream << boost::format(" (%1%-%2%-%3% %4%:%5%:%6%)") %
+                             timestamp.date().year() %
+                             timestamp.date().month() %
+                             timestamp.date().day() %
+                             timestamp.time_of_day().hours() %
+                             timestamp.time_of_day().minutes() %
+                             timestamp.time_of_day().seconds();
+
+
             return ::std::string(
                        "\t\tID        : " +
                        ::boost::lexical_cast<::std::string>(getPrimitiveId()) +
@@ -38,15 +53,20 @@ namespace OsmFileParser
                        "\n" +
 
                        "\t\tTimestamp : " +
+                       ::boost::lexical_cast<::std::string>(getTimestamp()) +
+                       dateStringStream.str() +
                        "\n" +
 
                        "\t\tChangeset : " +
+                       ::boost::lexical_cast<std::string>(getChangesetId()) +
                        "\n" +
 
                        "\t\tUser ID   : " +
+                       ::boost::lexical_cast<std::string>(getUserId()) +
                        "\n" +
 
-                       "\t\tUsername  : "
+                       "\t\tUsername  : " +
+                       getUsername().toUtf8() +
 
 
                        "\n" );
