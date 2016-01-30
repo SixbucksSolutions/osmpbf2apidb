@@ -21,10 +21,38 @@
 
 namespace OsmFileParser
 {
-    PbfReader::PbfReader(const std::string& pbfFilename ):
+    PbfReader::PbfReader():
         m_pbfFileSizeInBytes(0),
         m_pMemoryMappedBuffer(nullptr)
     {
+		;
+	}
+
+	void PbfReader::parse(
+    	const std::string&  pbfFilename,
+		std::function< void(
+			const OsmFileParser::OsmPrimitive::Node&,
+			const unsigned int) > nodeCallback )
+	{
+		// Without number of workers specified, use one worker thread
+		parse(pbfFilename, nodeCallback, 1);
+	}
+
+    void PbfReader::parse(
+        const std::string&  pbfFilename,
+
+        std::function< void(
+            const OsmFileParser::OsmPrimitive::Node&,
+            const unsigned int) > nodeCallback,
+
+		const unsigned int /*numberOfWorkerThreads*/ )
+	{
+		_memoryMapPbfFile(pbfFilename);
+	}
+
+	void PbfReader::_memoryMapPbfFile(
+		const std::string&	pbfFilename )
+	{
         // Open file
         int fd = -1;
 
@@ -58,7 +86,7 @@ namespace OsmFileParser
             throw ( "Could not close file descriptor after mapping file" );
         }
 
-        std::cout << "Bytes in file: " << getFileSizeInBytes() << std::endl;
+        std::cout << "Memory map successful, file size: " << getFileSizeInBytes() << std::endl;
     }
 
     /*

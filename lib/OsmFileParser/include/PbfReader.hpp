@@ -6,6 +6,7 @@
 #include <vector>
 #include <osmpbf/osmpbf.h>
 #include "Utf16String.hpp"
+#include "Node.hpp"
 
 namespace OsmFileParser
 {
@@ -14,12 +15,8 @@ namespace OsmFileParser
         public:
             /**
              * Create a new PBF Reader
-             *
-             * @param pbfFilename [in] Name of the PBF file to open
              */
-            PbfReader(
-                const std::string& pbfFilename
-            );
+            PbfReader();
 
             ~PbfReader();
 
@@ -31,17 +28,54 @@ namespace OsmFileParser
             std::uint64_t getFileSizeInBytes() const;
 
             /**
+             * Parse the specified PBF, invoking callback functions (if provided) as entities are
+             *   encountered
+             *
+             * @note This function will only use one worker thread to parse the file
+             */
+            void parse(
+                const std::string&  pbfFilename,
+                std::function < void(
+                    const OsmFileParser::OsmPrimitive::Node&,
+                    const unsigned int
+                ) > nodeCallback
+            );
+
+            /**
+             * Parse the specified PBF.
+             *
+             * The function will spawn the specified number of threads to divide up the
+             *  data processing
+             *
+             * Any callback functions provided will be invoked as matching primitives
+             *  are encountered
+             */
+            void parse(
+                const std::string&  pbfFilename,
+
+                std::function < void(
+                    const OsmFileParser::OsmPrimitive::Node&,
+                    const unsigned int
+                ) > nodeCallback,
+
+                const unsigned int numberOfWorkerThreads
+            );
+
+
+
+
+
+            /**
              * Walk over the PBF datablocks and add information about them to
              *      the worklists that will be handed to worker threads
              *
-             * @param [out]     pWorklists      The worklists that need to be populated
              * @param [in]      numWorklists    Number of entries in the worklists array
+			 *
+		  	 * @return Specified number of worklists
              */
-            /*
-            void generateDatablockWorklists(
-                boost::shared_array<DatablockWorklist> pWorklists,
-                const unsigned int  numWorklists );
-            */
+            std::vector<DatablockWorklist> _generateDatablockWorklists(
+                const unsigned int  numWorklists 
+			);
 
             /**
              * Given a starting offset and number of bytes, decompress and decode the data in that block, handing
@@ -58,6 +92,10 @@ namespace OsmFileParser
 
             std::uint64_t                                       m_pbfFileSizeInBytes;
             char*                                               m_pMemoryMappedBuffer;
+
+            void _memoryMapPbfFile(
+                const ::std::string&    pbfFilename
+            );
 
             std::uint64_t       _calculateFileOffset(
                 char const* const  pFilePtr
