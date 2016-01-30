@@ -18,6 +18,7 @@
 #include <zlib.h>
 #include "PbfReader.hpp"
 #include "LonLatCoordinate.hpp"
+#include "DatablockWorklist.hpp"
 
 namespace OsmFileParser
 {
@@ -89,103 +90,103 @@ namespace OsmFileParser
         std::cout << "Memory map successful, file size: " << getFileSizeInBytes() << std::endl;
     }
 
-    /*
-       void PbfReader::generateDatablockWorklists(
-       boost::shared_array<DatablockWorklist>    pWorklists,
+    const std::vector<DatablockWorklist> PbfReader::generateDatablockWorklists(
        const unsigned int                       numWorklists )
-       {
-       char*       pCurrentBufferCursor = m_pMemoryMappedBuffer;
-       uint32_t*   pBlobHeaderLength = reinterpret_cast<uint32_t*>
-       (pCurrentBufferCursor);
+	{
+		char*       pCurrentBufferCursor = m_pMemoryMappedBuffer;
+		uint32_t*   pBlobHeaderLength = 
+			reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
+		std::vector<DatablockWorklist> pWorklists(numWorklists);
 
-    // Find out how many bytes in the blob header
-    //std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
+		// Find out how many bytes in the blob header
+		//std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
 
-    // Move pointer to next piece of data
-    pCurrentBufferCursor += sizeof(uint32_t);
+		// Move pointer to next piece of data
+		pCurrentBufferCursor += sizeof(uint32_t);
 
-    // Read blobheader
-    OSMPBF::BlobHeader blobHeader;
+		// Read blobheader
+		OSMPBF::BlobHeader blobHeader;
 
-    if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
-    ntohl(*pBlobHeaderLength)) == false )
-    {
-    throw ( "Unable to parse blob header" );
-    }
+		if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
+					ntohl(*pBlobHeaderLength)) == false )
+		{
+			throw ( "Unable to parse blob header" );
+		}
 
-    if ( blobHeader.type() != "OSMHeader" )
-    {
-    throw ( "File did not start with an OSMHeader section" );
-    }
+		if ( blobHeader.type() != "OSMHeader" )
+		{
+			throw ( "File did not start with an OSMHeader section" );
+		}
 
-    std::cout << std::endl << "OSM File Header (" << ntohl(
-     *pBlobHeaderLength) << " bytes)" << std::endl;
-     std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
-     std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
+		std::cout << std::endl << "OSM File Header (" << ntohl(
+					*pBlobHeaderLength) << " bytes)" << std::endl;
+		std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
+		std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
 
-    // fast forward past header
-    pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+		// fast forward past header
+		pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
 
-    unsigned int currWorklist = 0;
+		unsigned int currWorklist = 0;
 
-    // Iterate over datablocks
-    while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
-    {
-    std::cout << std::endl << std::endl << "Trying to read datablock starting at offset 0x" << std::hex <<
-    _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+		// Iterate over datablocks
+		while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
+		{
+			std::cout << std::endl << std::endl << "Trying to read datablock starting at offset 0x" << std::hex <<
+				_calculateFileOffset(pCurrentBufferCursor) << std::endl;
 
-    pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
+			pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
 
-    // Move pointer to next piece of data (start of header data)
-    pCurrentBufferCursor += sizeof(uint32_t);
+			// Move pointer to next piece of data (start of header data)
+			pCurrentBufferCursor += sizeof(uint32_t);
 
-    // Read blobheader
-    OSMPBF::BlobHeader blobHeader;
+			// Read blobheader
+			OSMPBF::BlobHeader blobHeader;
 
-    std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
-    _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+			std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
+				_calculateFileOffset(pCurrentBufferCursor) << std::endl;
 
-    if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
-    ntohl(*pBlobHeaderLength)) == false )
-    {
-    throw ( "Unable to parse section header" );
-    }
+			if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
+						ntohl(*pBlobHeaderLength)) == false )
+			{
+				throw ( "Unable to parse section header" );
+			}
 
-    if ( blobHeader.type() != "OSMData" )
-    {
-    throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
-    }
+			if ( blobHeader.type() != "OSMData" )
+			{
+				throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
+			}
 
-    std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
-    _calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
-    << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
-    "\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
+			std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
+				_calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
+				<< std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
+				"\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
 
-    const DatablockWorklist::CompressedDatablock newDatablock =
-    {
-        _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength)),     // start offset
-        _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
-        blobHeader.datasize()
-    };
+			const DatablockWorklist::CompressedDatablock newDatablock =
+			{
+				_calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength)),     // start offset
+				_calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
+				blobHeader.datasize()
+			};
 
-    pWorklists[currWorklist].addDatablock(newDatablock);
+			pWorklists[currWorklist].addDatablock(newDatablock);
 
-    std::cout << "\tAdded datablock from offset 0x" << std::hex <<
-        newDatablock.offsetStart << " to 0x" <<
-        newDatablock.offsetEnd << " (" <<
-        std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
-        boost::lexical_cast<std::string>(currWorklist) << std::endl;
+			std::cout << "\tAdded datablock from offset 0x" << std::hex <<
+				newDatablock.offsetStart << " to 0x" <<
+				newDatablock.offsetEnd << " (" <<
+				std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
+				boost::lexical_cast<std::string>(currWorklist) << std::endl;
 
-    // Update current worklist, wrapping back to zero if we've hit the last one
-    currWorklist = (currWorklist + 1) % numWorklists;
+			// Update current worklist, wrapping back to zero if we've hit the last one
+			currWorklist = (currWorklist + 1) % numWorklists;
 
-    pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
-    }
+			pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
+		}
 
-    std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
-    << std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
-    }
-    */
+		std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
+			<< std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+
+		return pWorklists;
+	}
 
 
     /*

@@ -7,6 +7,7 @@
 #include <osmpbf/osmpbf.h>
 #include "Utf16String.hpp"
 #include "Node.hpp"
+#include "../src/DatablockWorklist.hpp"
 
 namespace OsmFileParser
 {
@@ -61,22 +62,6 @@ namespace OsmFileParser
                 const unsigned int numberOfWorkerThreads
             );
 
-
-
-
-
-            /**
-             * Walk over the PBF datablocks and add information about them to
-             *      the worklists that will be handed to worker threads
-             *
-             * @param [in]      numWorklists    Number of entries in the worklists array
-			 *
-		  	 * @return Specified number of worklists
-             */
-            std::vector<DatablockWorklist> _generateDatablockWorklists(
-                const unsigned int  numWorklists 
-			);
-
             /**
              * Given a starting offset and number of bytes, decompress and decode the data in that block, handing
              *  the caller back a set of OSM entities (i.e., Node, Way, Relations) that they can do something with
@@ -100,6 +85,18 @@ namespace OsmFileParser
             std::uint64_t       _calculateFileOffset(
                 char const* const  pFilePtr
             ) const;
+
+            /**
+             * Walk over the PBF datablocks and add information about them to
+             *      the worklists that will be handed to worker threads
+             *
+             * @param [in]      numWorklists    Number of entries in the worklists array
+             *
+             * @return Specified number of worklists
+             */
+            const std::vector<DatablockWorklist> _generateDatablockWorklists(
+                const unsigned int  numWorklists
+            );
 
             void            _inflateCompressedPayload(
                 const OSMPBF::Blob& currDataPayload,
