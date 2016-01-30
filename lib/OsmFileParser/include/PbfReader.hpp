@@ -55,13 +55,14 @@ namespace OsmFileParser
 
         private:
 
-            std::uint64_t                       m_pbfFileSizeInBytes;
-            char*                               m_pMemoryMappedBuffer;
-            ::OsmFileParser::PrimitiveVisitor*  m_pPrimitiveVisitor;
-            bool                                m_visitNodes;
-            bool                                m_visitWays;
-            bool                                m_visitRelations;
-            bool                                m_visitChangesets;
+            std::uint64_t                               m_pbfFileSizeInBytes;
+            char*                                       m_pMemoryMappedBuffer;
+            std::vector<::OsmFileParser::Utf16String>   m_stringTable;
+            ::OsmFileParser::PrimitiveVisitor*          m_pPrimitiveVisitor;
+            bool                                        m_visitNodes;
+            bool                                        m_visitWays;
+            bool                                        m_visitRelations;
+            bool                                        m_visitChangesets;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename
@@ -101,7 +102,7 @@ namespace OsmFileParser
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
 
-            std::vector<Utf16String> _generateStringList(
+            void _generateStringTable(
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
 

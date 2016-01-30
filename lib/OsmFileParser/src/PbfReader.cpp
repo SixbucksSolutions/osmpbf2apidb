@@ -31,6 +31,7 @@ namespace OsmFileParser
     PbfReader::PbfReader():
         m_pbfFileSizeInBytes(0),
         m_pMemoryMappedBuffer(nullptr),
+        m_stringTable(),
         m_pPrimitiveVisitor(nullptr),
         m_visitNodes(false),
         m_visitWays(false),
@@ -69,7 +70,7 @@ namespace OsmFileParser
             workerThreads[i] = std::thread(
                 _processWorklist, i, std::ref(worklists[i]));
             */
-            _processWorklist(i, worklists[i]);
+            _processWorklist(i, worklists.at(i));
         }
 
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
@@ -197,7 +198,7 @@ namespace OsmFileParser
                 blobHeader.datasize()
             };
 
-            pWorklists[currWorklist].addDatablock(newDatablock);
+            pWorklists.at(currWorklist).addDatablock(newDatablock);
 
             std::cout << "\tAdded datablock from offset 0x" << std::hex <<
                       newDatablock.offsetStart << " to 0x" <<
@@ -313,8 +314,7 @@ namespace OsmFileParser
     {
         // NOTE: strings are stored in PBF in UTF8, we store in UTF16 internally,
         //      serializing out to UTF8 again on the way out
-        const std::vector<Utf16String> stringList =
-            _generateStringList( primitiveBlock );
+        _generateStringTable( primitiveBlock );
 
         /**
          * Per PBF spec, the primitive group will have all its elements in the same
@@ -332,7 +332,7 @@ namespace OsmFileParser
                   boost::lexical_cast<std::string>(primitiveBlock.primitivegroup().size()) <<
                   " primitive groups" << std::endl;
 
-        // Iterate over all the primtivegroups in the block
+        // Iterate over all the primitivegroups in the block
         for ( int primitiveGroupIndex = 0;
                 primitiveGroupIndex < primitiveBlock.primitivegroup().size();
                 ++primitiveGroupIndex )
@@ -426,9 +426,12 @@ namespace OsmFileParser
 
             //break;
         }
+
+        // Drop block-specific resources as quickly as possible
+        m_stringTable.clear();
     }
 
-    std::vector<Utf16String> PbfReader::_generateStringList(
+    void PbfReader::_generateStringTable(
         const OSMPBF::PrimitiveBlock&   primitiveBlock )
     {
         const OSMPBF::StringTable& st = primitiveBlock.stringtable();
@@ -442,8 +445,7 @@ namespace OsmFileParser
         // *** IMPORTANT NOTE ***
         //      PBF Strings are in UTF-8, we convert to UTF-16 internally,
         //      then serialize back out to UTF-8 on the way out
-        std::vector<Utf16String> stringList(numStrings);
-
+        m_stringTable.clear();
         Utf16String utf16String;
 
         for ( unsigned int i = 0; i < numStrings; ++i )
@@ -461,10 +463,8 @@ namespace OsmFileParser
                 throw ( "String from string table contained invalid UTF-8 sequence" );
             }
 
-            stringList.push_back(utf16String);
+            m_stringTable.push_back(utf16String);
         }
-
-        return stringList;
     }
 
     void PbfReader::_processDenseNodes(
@@ -482,33 +482,52 @@ namespace OsmFileParser
         // Need all parallel lists to be the same size as data isn't sane without it
         const int listSize = denseNodes.id_size();
 
-        if ( (denseNodes.lat_size() != listSize) ||
-                (denseNodes.lon_size() != listSize) ||
-                (denseInfo.version_size() != listSize) ||
-                (denseInfo.timestamp_size() != listSize) ||
-                (denseInfo.changeset_size() != listSize) ||
-                (denseInfo.uid_size() != listSize) ||
-                (denseInfo.user_sid_size() != listSize)
-           )
+        if (
+            (denseInfo.version_size()   != listSize) ||
+            (denseInfo.timestamp_size() != listSize) ||
+            (denseInfo.changeset_size() != listSize) ||
+            (denseInfo.uid_size()       != listSize) ||
+            (denseInfo.user_sid_size()  != listSize) ||
+            (denseNodes.lat_size()      != listSize) ||
+            (denseNodes.lon_size()      != listSize)
+        )
         {
             throw ( "Found dense node entry with unbalanced list sizes" );
         }
 
-        // Uses delta encoding (only stores difference in id/location from previous node to save space with
-        //      variable-length integers)
-        LonLatCoordinate                            lonLat(0, 0);
+        // Uses delta encoding (only stores difference from corresponding value in
+        //      previous node to save space due to variable-length integers in format)
         ::OsmFileParser::OsmPrimitive::Identifier   id(0);
+        ::OsmFileParser::OsmPrimitive::Version      version(0);
+        ::OsmFileParser::OsmPrimitive::Timestamp    timestamp(0);
+        ::OsmFileParser::OsmPrimitive::Identifier   changesetId(0);
+        ::OsmFileParser::OsmPrimitive::UserId       userId(0);
+        ::std::int32_t                              usernameStringTableIndex(
+            0);
+        ::OsmFileParser::LonLatCoordinate           lonLat(0, 0);
 
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
         {
-            id += denseNodes.id().Get(coordIndex);
+            id                          += denseNodes.id().Get(coordIndex);
+            version                     += denseInfo.version().Get(coordIndex);
+            timestamp                   += denseInfo.timestamp().Get(coordIndex);
+            changesetId                 += denseInfo.changeset().Get(coordIndex);
+            userId                      += denseInfo.uid().Get(coordIndex);
+            usernameStringTableIndex    += denseInfo.user_sid().Get(coordIndex);
+
             lonLat.deltaUpdate(
                 denseNodes.lon().Get(coordIndex),
                 denseNodes.lat().Get(coordIndex) );
-            /*
-            ::OsmFileParser::OsmPrimitive::Node newNode(
-                id, lonLat );
-            */
+
+            m_pPrimitiveVisitor->visit(
+                ::OsmFileParser::OsmPrimitive::Node(
+                    id,
+                    version,
+                    timestamp,
+                    changesetId,
+                    userId,
+                    m_stringTable.at(usernameStringTableIndex),
+                    lonLat) );
         }
     }
 
