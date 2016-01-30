@@ -94,6 +94,8 @@ namespace OsmFileParser
                     return m_username;
                 }
 
+                virtual ::std::string toString() const;
+
             protected:
 
                 /// Primitive ID

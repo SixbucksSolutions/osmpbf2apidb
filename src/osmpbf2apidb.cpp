@@ -27,10 +27,17 @@ int main(
         ::OsmFileParser::PbfReader pbfReader;
         ::OsmDataWriter::PostgresqlApiDb::NoTableConstraints sqlFileWriter;
         pbfReader.parse(pbfFilename, &sqlFileWriter);
+
+        // We know once we're done with parse, all worker threads have safely terminated so no chance of
+        //  race condition on following data
+        std::cout << ::std::endl << "Nodes visited: " << ::std::dec <<
+                  sqlFileWriter.getVisitedNodes() <<
+                  std::endl;
     }
     catch ( char const* const  e )
     {
-
+        std::cerr << "Caught exception when parsing data: " << e << std::endl;
+        return -1;
     }
 
 }

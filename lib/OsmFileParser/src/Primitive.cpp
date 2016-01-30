@@ -1,3 +1,7 @@
+#include <string>
+#include <iostream>
+#include <boost/lexical_cast.hpp>
+#include <boost/date_time.hpp>
 #include "Primitive.hpp"
 
 namespace OsmFileParser
@@ -22,6 +26,30 @@ namespace OsmFileParser
             ;
         }
 
+        ::std::string Primitive::toString() const
+        {
+            return ::std::string(
+                       "\t\tID        : " +
+                       ::boost::lexical_cast<::std::string>(getPrimitiveId()) +
+                       "\n" +
 
+                       "\t\tVersion   : " +
+                       ::boost::lexical_cast<::std::string>(getVersion()) +
+                       "\n" +
+
+                       "\t\tTimestamp : " +
+                       "\n" +
+
+                       "\t\tChangeset : " +
+                       "\n" +
+
+                       "\t\tUser ID   : " +
+                       "\n" +
+
+                       "\t\tUsername  : "
+
+
+                       "\n" );
+        }
     }
 }

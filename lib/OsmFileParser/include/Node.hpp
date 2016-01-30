@@ -1,6 +1,7 @@
 #ifndef _NODE
 #define _NODE
 
+#include <string>
 #include "Primitive.hpp"
 #include "LonLatCoordinate.hpp"
 
@@ -22,6 +23,8 @@ namespace OsmFileParser
                     const ::OsmFileParser::LonLatCoordinate&            lonLat );
 
                 virtual ~Node() { }
+
+                //virtual ::std::string toString() const;
 
             protected:
                 ::OsmFileParser::LonLatCoordinate   m_lonLat;
