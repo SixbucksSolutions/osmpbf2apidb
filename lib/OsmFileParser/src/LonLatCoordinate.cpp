@@ -41,7 +41,7 @@ namespace OsmFileParser
         m_lat += latDelta;
     }
 
-    std::int_fast32_t   convertDegreeToNanodegree(
+    std::int_fast32_t   LonLatCoordinate::convertDegreeToNanodegree(
         const double&       degree )
     {
         const double scaleUp(degree * 1000000000);
@@ -50,6 +50,13 @@ namespace OsmFileParser
         return convert;
     }
 
+    double LonLatCoordinate::convertNanodegreeToDegree(
+        const std::int_fast32_t&    nanoDegree )
+    {
+        const double degree = nanoDegree / 10000000.0;
+
+        return degree;
+    }
 
 
 }

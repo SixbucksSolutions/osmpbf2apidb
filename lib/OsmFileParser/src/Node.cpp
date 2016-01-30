@@ -1,3 +1,7 @@
+#include <cstdint>
+#include <string>
+#include <iostream>
+#include <boost/lexical_cast.hpp>
 #include "Primitive.hpp"
 #include "Node.hpp"
 
@@ -18,6 +22,25 @@ namespace OsmFileParser
             m_lonLat(lonLat)
         {
             ;
+        }
+
+        ::std::string Node::toString() const
+        {
+            std::int_fast32_t lon;
+            std::int_fast32_t lat;
+            m_lonLat.getLonLat(lon, lat);
+            ::std::string retString("\tNode\n" +
+                                    ::OsmFileParser::OsmPrimitive::Primitive::toString() +
+                                    "\t\tLatitude  : " +
+                                    ::boost::lexical_cast<std::string>
+                                    (LonLatCoordinate::convertNanodegreeToDegree(lat)) +
+                                    "\n" +
+                                    "\t\tLongitude : " +
+                                    boost::lexical_cast<std::string>
+                                    (LonLatCoordinate::convertNanodegreeToDegree(lon)) +
+                                    "\n");
+
+            return retString;
         }
     }
 }
