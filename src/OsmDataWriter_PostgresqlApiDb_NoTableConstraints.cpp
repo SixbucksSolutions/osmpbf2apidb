@@ -1,4 +1,4 @@
-#include "primitives/Node.hpp"
+#include "Node.hpp"
 #include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
 
 namespace OsmDataWriter

@@ -1,7 +1,7 @@
 #ifndef _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS
 #define _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS
 
-#include "OsmFileParser/primitives/Node.hpp"
+#include "Node.hpp"
 
 namespace OsmDataWriter
 {

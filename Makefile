@@ -1,8 +1,7 @@
 CC=ccache g++
-CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD -Isrc/OsmFileParser/src
+CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD -Isrc/OsmFileParser/include
 LD=ccache g++ 
-LDFLAGS=-Lsrc/OsmFileParser/lib
-LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf -llibosmfileparser
+LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf 
 CPP_FILES := $(wildcard src/*.cpp) 
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 ASTYLE=astyle
@@ -13,13 +12,12 @@ bin/osmpbf2apidb : $(OBJ_FILES) src/OsmFileParser/lib/libosmfileparser.a
 
 obj/%.o : src/%.cpp
 	$(ASTYLE) $(ASTYLE_FLAGS) $< $(<:.cpp=.hpp)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-
+	$(CC) $(CPPFLAGS) -c $< -o $@ 
 
 src/OsmFileParser/lib/libosmfileparser.a :
 	cd src/OsmFileParser; make
 
 clean :
-	rm -f obj/*.o bin/* src/OsmFileParser/lib/*
+	rm -f obj/*.o bin/* src/OsmFileParser/obj/*.o src/OsmFileParser/lib/*.a
 
 -include $(OBJFILES:.o=.d)
