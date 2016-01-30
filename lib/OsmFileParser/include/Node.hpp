@@ -2,23 +2,32 @@
 #define _NODE
 
 #include "Primitive.hpp"
+#include "LonLatCoordinate.hpp"
 
 namespace OsmFileParser
 {
-	namespace OsmPrimitive
-	{
-		class Node : public ::OsmFileParser::OsmPrimitive::Primitive
-		{
-			public:
-				
-				Node( 
-					const ::OsmFileParser::OsmPrimitive::Identifier nodeId
-				)
-				{ m_primitiveId = nodeId; }
+    namespace OsmPrimitive
+    {
+        class Node : public ::OsmFileParser::OsmPrimitive::Primitive
+        {
+            public:
 
-				virtual ~Node() { }
-		};
-	}
+                Node(
+                    const ::OsmFileParser::OsmPrimitive::Identifier     nodeId,
+                    const ::OsmFileParser::OsmPrimitive::Version        versionNumber,
+                    const ::OsmFileParser::OsmPrimitive::Timestamp      timestamp,
+                    const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
+                    const ::OsmFileParser::OsmPrimitive::UserId         userId,
+                    const ::OsmFileParser::Utf16String&                 username,
+                    const ::OsmFileParser::LonLatCoordinate&            lonLat );
+
+                virtual ~Node() { }
+
+            protected:
+                ::OsmFileParser::LonLatCoordinate   m_lonLat;
+
+        };
+    }
 }
 
 #endif // _NODE

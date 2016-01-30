@@ -2,66 +2,131 @@
 #define _PRIMITIVE
 
 #include <cstdint>
+#include "Utf16String.hpp"
 
 namespace OsmFileParser
 {
-	namespace OsmPrimitive
-	{
-		/**
-		 * OSM identifiers have been 64-bit signed integers since 2012-ish
-		 *
-		 * See: http://wiki.openstreetmap.org/wiki/64-bit_Identifiers
-		 */
-		typedef ::std::int64_t Identifier;
+    namespace OsmPrimitive
+    {
+        /**
+         * OSM identifiers have been 64-bit signed integers since 2012-ish
+         *
+         * See: http://wiki.openstreetmap.org/wiki/64-bit_Identifiers
+         */
+        typedef ::std::int64_t Identifier;
 
-		/**
-		 * Base class for OSM primitive entities
-		 */
-		class Primitive
-		{
-			public:
-				/**
-				 * Default constructor, sets all ID values to zero
-				 */
-				Primitive() : m_primitiveId(0), m_changesetId(0) { }
+        typedef ::std::int32_t Version;
 
-				/**
-				 * Virtual destructor, must be implemented in child classes
-				 */
-				virtual ~Primitive() { } 
+        typedef ::std::int64_t Timestamp;
 
-				/**
-				 * Get the unique identifier value for the given primititive 
-				 *	
-				 * @return Unique identifier for this OSM primitive
-				 *
-				 * @note Only guaranteed to be unique per primitive type
-				 */
-				virtual ::OsmFileParser::OsmPrimitive::Identifier getPrimitiveId() const 
-				{
-					return m_primitiveId; 
-				}
+        typedef ::std::int32_t UserId;
 
-				/**
-				 * Get the changeset ID for this primitive
-				 *
-				 * @return Changeset ID of the given primitive
-				 */
-				virtual ::OsmFileParser::OsmPrimitive::Identifier getChangesetId() const 
-				{
-					return m_changesetId;
-				}
+        /**
+         * Base class for OSM primitive entities
+         */
+        class Primitive
+        {
+            public:
+                /**
+                 * Virtual destructor, must be implemented in child classes
+                 */
+                virtual ~Primitive() { }
 
-			protected:
+                /**
+                 * Get the unique identifier value for the given primititive
+                 *
+                 * @return Unique identifier for this OSM primitive
+                 *
+                 * @note Only guaranteed to be unique per primitive type
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::Identifier getPrimitiveId() const
+                {
+                    return m_primitiveId;
+                }
 
-				/// Primitive ID
-				::OsmFileParser::OsmPrimitive::Identifier m_primitiveId;
+                /**
+                 * Get the version of the primitive
+                 *
+                 * @return Version number of this primitive
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::Version getVersion() const
+                {
+                    return m_versionNumber;
+                }
 
-				/// Changeset ID
-				::OsmFileParser::OsmPrimitive::Identifier m_changesetId;
+                /**
+                 * Get the timestamp for this primitive
+                 *
+                 * @return Timestamp for creation or last update
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::Timestamp getTimestamp() const
+                {
+                    return m_timestamp;
+                }
 
-		};
-	}
+                /**
+                 * Get the changeset ID for this primitive
+                 *
+                 * @return Changeset ID of the given primitive
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::Identifier getChangesetId() const
+                {
+                    return m_changesetId;
+                }
+
+                /**
+                 * Get the User ID for this primitive
+                 *
+                 * @return User ID for this primitive
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::UserId getUserId() const
+                {
+                    return m_userId;
+                }
+
+                /**
+                 * Get the username for who performed last edit
+                 *
+                 * @return Username of last editor
+                 */
+                virtual ::OsmFileParser::Utf16String getUsername() const
+                {
+                    return m_username;
+                }
+
+            protected:
+
+                /// Primitive ID
+                ::OsmFileParser::OsmPrimitive::Identifier   m_primitiveId;
+
+                /// Version number
+                ::OsmFileParser::OsmPrimitive::Version      m_versionNumber;
+
+                /// Timestamp
+                ::OsmFileParser::OsmPrimitive::Timestamp    m_timestamp;
+
+                /// Changeset number
+                ::OsmFileParser::OsmPrimitive::Identifier   m_changesetId;
+
+                /// User UID
+                ::OsmFileParser::OsmPrimitive::UserId       m_userId;
+
+                /// User name
+                ::OsmFileParser::Utf16String                m_username;
+
+                // Constructor to initialize values that child classes can leverage
+                Primitive(
+                    const Identifier    primitiveId,
+                    const Version       versionNumber,
+                    const Timestamp     timestamp,
+                    const Identifier    changesetId,
+                    const UserId        userId,
+                    const Utf16String&  username
+                );
+
+
+        };
+    }
 }
 
 #endif // _PRIMITIVE

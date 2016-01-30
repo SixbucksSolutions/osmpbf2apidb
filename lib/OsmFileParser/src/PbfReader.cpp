@@ -31,30 +31,30 @@ namespace OsmFileParser
     PbfReader::PbfReader():
         m_pbfFileSizeInBytes(0),
         m_pMemoryMappedBuffer(nullptr),
-		m_pPrimitiveVisitor(nullptr),
-		m_visitNodes(false),
-		m_visitWays(false),
-		m_visitRelations(false),
-		m_visitChangesets(false)
+        m_pPrimitiveVisitor(nullptr),
+        m_visitNodes(false),
+        m_visitWays(false),
+        m_visitRelations(false),
+        m_visitChangesets(false)
     {
         ;
     }
 
     void PbfReader::parse(
-        const std::string&  				pbfFilename,
-		::OsmFileParser::PrimitiveVisitor*	pPrimitiveVisitor )
+        const std::string&                  pbfFilename,
+        ::OsmFileParser::PrimitiveVisitor*  pPrimitiveVisitor )
     {
         // Without number of workers specified, use one worker thread
         parse(pbfFilename, pPrimitiveVisitor, 1);
     }
 
     void PbfReader::parse(
-        const std::string&  				pbfFilename,
-		::OsmFileParser::PrimitiveVisitor* 	pPrimitiveVisitor,
+        const std::string&                  pbfFilename,
+        ::OsmFileParser::PrimitiveVisitor*  pPrimitiveVisitor,
         const unsigned int numberOfWorkerThreads )
     {
-		m_pPrimitiveVisitor = pPrimitiveVisitor;
-		m_visitNodes = m_pPrimitiveVisitor->shouldVisitNodes();
+        m_pPrimitiveVisitor = pPrimitiveVisitor;
+        m_visitNodes = m_pPrimitiveVisitor->shouldVisitNodes();
 
         _memoryMapPbfFile(pbfFilename);
 
@@ -345,14 +345,15 @@ namespace OsmFileParser
                 std::cout << "\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains (regular) node entries" << std::endl;
-				if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
-				{
-                	throw ( "Nodes not implemented yet" );
-				}
-				else
-				{
-					std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
-				}
+
+                if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
+                {
+                    throw ( "Nodes not implemented yet" );
+                }
+                else
+                {
+                    std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
+                }
             }
             else if ( primitiveGroup.has_dense() == true )
             {
@@ -360,14 +361,14 @@ namespace OsmFileParser
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains dense node entries" << std::endl;
 
-				if ( m_pPrimitiveVisitor->shouldVisitNodes() == true ) 
-				{
-                	_processDenseNodes( primitiveGroup.dense(), primitiveBlock );
-				}
-				else
-				{
-					std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
-				}
+                if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
+                {
+                    _processDenseNodes( primitiveGroup.dense(), primitiveBlock );
+                }
+                else
+                {
+                    std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
+                }
             }
             else if ( primitiveGroup.ways_size() > 0 )
             {
@@ -375,14 +376,14 @@ namespace OsmFileParser
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains way entries" << std::endl;
 
-				if ( m_pPrimitiveVisitor->shouldVisitWays() == true )
-				{
-                	throw ( "Ways not implemented yet" );
-				}
-				else
-				{
-					std::cout << "\t\tSkipping as visitor doesn't care about ways" << std::endl;
-				}
+                if ( m_pPrimitiveVisitor->shouldVisitWays() == true )
+                {
+                    throw ( "Ways not implemented yet" );
+                }
+                else
+                {
+                    std::cout << "\t\tSkipping as visitor doesn't care about ways" << std::endl;
+                }
 
             }
             else if ( primitiveGroup.relations_size() > 0 )
@@ -391,14 +392,15 @@ namespace OsmFileParser
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains relation entries" << std::endl;
 
-				if ( m_pPrimitiveVisitor->shouldVisitRelations() == true )
-				{
-					throw( "Relations not implemented yet" );
-				}
-				else
-				{
-					std::cout << "\t\tSkipping as visitor doesn't care about relations" << std::endl;
-				}
+                if ( m_pPrimitiveVisitor->shouldVisitRelations() == true )
+                {
+                    throw ( "Relations not implemented yet" );
+                }
+                else
+                {
+                    std::cout << "\t\tSkipping as visitor doesn't care about relations" <<
+                              std::endl;
+                }
             }
             else if ( primitiveGroup.changesets_size() > 0 )
             {
@@ -408,13 +410,14 @@ namespace OsmFileParser
                           std::endl;
 
                 if ( m_pPrimitiveVisitor->shouldVisitChangesets() == true )
-				{
-					throw( "Changesets not implemented yet");
-				}
-				else
-				{
-					std::cout << "\t\tSkipping as visitor doesn't care about changesets" << std::endl;
-				}
+                {
+                    throw ( "Changesets not implemented yet");
+                }
+                else
+                {
+                    std::cout << "\t\tSkipping as visitor doesn't care about changesets" <<
+                              std::endl;
+                }
             }
             else
             {
@@ -468,27 +471,44 @@ namespace OsmFileParser
         const OSMPBF::DenseNodes&       denseNodes,
         const OSMPBF::PrimitiveBlock&   primitiveBlock )
     {
-        // Need id, lat, lon parallel lists to be the same size as data isn't sane without it
+        // Make sure we have dense info as we need info from it (changeset, timestamp, etc.)
+        if ( denseNodes.has_denseinfo() == false )
+        {
+            throw ( "Found dense nodes entry without accompanying dense info" );
+        }
+
+        const OSMPBF::DenseInfo denseInfo = denseNodes.denseinfo();
+
+        // Need all parallel lists to be the same size as data isn't sane without it
         const int listSize = denseNodes.id_size();
 
         if ( (denseNodes.lat_size() != listSize) ||
-                (denseNodes.lon_size() != listSize) )
+                (denseNodes.lon_size() != listSize) ||
+                (denseInfo.version_size() != listSize) ||
+                (denseInfo.timestamp_size() != listSize) ||
+                (denseInfo.changeset_size() != listSize) ||
+                (denseInfo.uid_size() != listSize) ||
+                (denseInfo.user_sid_size() != listSize)
+           )
         {
             throw ( "Found dense node entry with unbalanced list sizes" );
         }
 
-        // Request change in capacity for list of generated elements
-        //m_createdOsmElements.reserve( m_createdOsmElements.size() + listSize );
-
         // Uses delta encoding (only stores difference in id/location from previous node to save space with
         //      variable-length integers)
-        LonLatCoordinate    lonLat(0, 0);
-        std::int64_t        id(0);
+        LonLatCoordinate                            lonLat(0, 0);
+        ::OsmFileParser::OsmPrimitive::Identifier   id(0);
 
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
         {
-
-
+            id += denseNodes.id().Get(coordIndex);
+            lonLat.deltaUpdate(
+                denseNodes.lon().Get(coordIndex),
+                denseNodes.lat().Get(coordIndex) );
+            /*
+            ::OsmFileParser::OsmPrimitive::Node newNode(
+                id, lonLat );
+            */
         }
     }
 

@@ -29,39 +29,39 @@ namespace OsmFileParser
              */
             std::uint64_t getFileSizeInBytes() const;
 
-			/**
-			 * Parse a PBF file, invoking visitor visit() methods as appropriate
-			 *
-			 * @note A single worker thread will be used
-			 */
+            /**
+             * Parse a PBF file, invoking visitor visit() methods as appropriate
+             *
+             * @note A single worker thread will be used
+             */
             void parse(
-                const std::string&  				pbfFilename,
-				::OsmFileParser::PrimitiveVisitor* 	pPrimitiveVisitor
+                const std::string&                  pbfFilename,
+                ::OsmFileParser::PrimitiveVisitor*  pPrimitiveVisitor
             );
 
             /**
              * Parse the specified PBF.
              *
-			 * @param [in] pPrimitiveVisitor The visitor object to call upon primitives
-			 *
+             * @param [in] pPrimitiveVisitor The visitor object to call upon primitives
+             *
              * The function will spawn the specified number of threads to divide up the
              *  data processing
              */
             void parse(
-                const std::string&  				pbfFilename,
-				::OsmFileParser::PrimitiveVisitor* 	pPrimitiveVisitor,
-                const unsigned int 					numberOfWorkerThreads
+                const std::string&                  pbfFilename,
+                ::OsmFileParser::PrimitiveVisitor*  pPrimitiveVisitor,
+                const unsigned int                  numberOfWorkerThreads
             );
 
         private:
 
-            std::uint64_t   					m_pbfFileSizeInBytes;
-            char*           					m_pMemoryMappedBuffer;
-			::OsmFileParser::PrimitiveVisitor*  m_pPrimitiveVisitor;
-			bool								m_visitNodes;
-			bool								m_visitWays;
-			bool								m_visitRelations;
-			bool								m_visitChangesets;
+            std::uint64_t                       m_pbfFileSizeInBytes;
+            char*                               m_pMemoryMappedBuffer;
+            ::OsmFileParser::PrimitiveVisitor*  m_pPrimitiveVisitor;
+            bool                                m_visitNodes;
+            bool                                m_visitWays;
+            bool                                m_visitRelations;
+            bool                                m_visitChangesets;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename
