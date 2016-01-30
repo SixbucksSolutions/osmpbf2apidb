@@ -1,5 +1,5 @@
 CC=ccache g++
-CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD
+CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -MMD -Iinclude/
 CPP_FILES := $(wildcard src/*.cpp) 
 OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 ASTYLE=astyle
@@ -11,7 +11,7 @@ lib/libosmfileparser.a : $(OBJ_FILES)
 	$(AR) $(AR_FLAGS) -o $@ $^ 
 
 obj/%.o : src/%.cpp
-	$(ASTYLE) $(ASTYLE_FLAGS) $< $(<:.cpp=.hpp)
+	$(ASTYLE) $(ASTYLE_FLAGS) $< $(addprefix include/,$(notdir $(<:.cpp=.hpp)))
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
 clean :
