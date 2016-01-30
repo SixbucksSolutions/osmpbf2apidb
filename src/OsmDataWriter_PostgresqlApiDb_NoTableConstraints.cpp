@@ -1,5 +1,7 @@
-#include "OsmFileParser/include/Node.hpp"
 #include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
+#include "OsmFileParser/include/Primitive.hpp"
+#include "OsmFileParser/include/PrimitiveVisitor.hpp"
+#include "OsmFileParser/include/Node.hpp"
 
 namespace OsmDataWriter
 {
@@ -10,14 +12,10 @@ namespace OsmDataWriter
             ;
         }
 
-        void NoTableConstraints::nodeCallback(
-            const ::OsmFileParser::OsmPrimitive::Node& node,
-            const unsigned int workerId )
+        void NoTableConstraints::visit(
+            const ::OsmFileParser::OsmPrimitive::Node& node )
         {
             ;
         }
-
-
-
     }
 }

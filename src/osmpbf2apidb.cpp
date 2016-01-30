@@ -26,16 +26,7 @@ int main(
     {
         ::OsmFileParser::PbfReader pbfReader;
         ::OsmDataWriter::PostgresqlApiDb::NoTableConstraints sqlFileWriter;
-
-        ::std::function <
-        void(const ::OsmFileParser::OsmPrimitive::Node&,
-             const unsigned int) > nodeCallback =
-                 std::bind(
-                     &OsmDataWriter::PostgresqlApiDb::NoTableConstraints::nodeCallback,
-                     sqlFileWriter, std::placeholders::_1,
-                     std::placeholders::_2);
-
-        pbfReader.parse(pbfFilename, nodeCallback);
+        pbfReader.parse(pbfFilename, &sqlFileWriter);
     }
     catch ( char const* const  e )
     {

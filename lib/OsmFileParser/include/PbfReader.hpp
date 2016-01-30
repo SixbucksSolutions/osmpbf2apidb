@@ -8,6 +8,7 @@
 #include "Utf16String.hpp"
 #include "Node.hpp"
 #include "DatablockWorklist.hpp"
+#include "PrimitiveVisitor.hpp"
 
 namespace OsmFileParser
 {
@@ -28,48 +29,39 @@ namespace OsmFileParser
              */
             std::uint64_t getFileSizeInBytes() const;
 
-            /**
-             * Parse the specified PBF, invoking callback functions (if provided) as entities are
-             *   encountered
-             *
-             * @note This function will only use one worker thread to parse the file
-             */
+			/**
+			 * Parse a PBF file, invoking visitor visit() methods as appropriate
+			 *
+			 * @note A single worker thread will be used
+			 */
             void parse(
-                const std::string&  pbfFilename,
-                std::function < void(
-                    const OsmFileParser::OsmPrimitive::Node&,
-                    const unsigned int
-                ) > nodeCallback
+                const std::string&  				pbfFilename,
+				::OsmFileParser::PrimitiveVisitor* 	pPrimitiveVisitor
             );
 
             /**
              * Parse the specified PBF.
              *
+			 * @param [in] pPrimitiveVisitor The visitor object to call upon primitives
+			 *
              * The function will spawn the specified number of threads to divide up the
              *  data processing
-             *
-             * Any callback functions provided will be invoked as matching primitives
-             *  are encountered
              */
             void parse(
-                const std::string&  pbfFilename,
-
-                std::function < void(
-                    const OsmFileParser::OsmPrimitive::Node&,
-                    const unsigned int
-                ) > nodeCallback,
-
-                const unsigned int numberOfWorkerThreads
+                const std::string&  				pbfFilename,
+				::OsmFileParser::PrimitiveVisitor* 	pPrimitiveVisitor,
+                const unsigned int 					numberOfWorkerThreads
             );
 
         private:
 
-            std::uint64_t   m_pbfFileSizeInBytes;
-            char*           m_pMemoryMappedBuffer;
-
-            std::function < void(
-                const OsmFileParser::OsmPrimitive::Node&,
-                const unsigned int) >   m_nodeCallback;
+            std::uint64_t   					m_pbfFileSizeInBytes;
+            char*           					m_pMemoryMappedBuffer;
+			::OsmFileParser::PrimitiveVisitor*  m_pPrimitiveVisitor;
+			bool								m_visitNodes;
+			bool								m_visitWays;
+			bool								m_visitRelations;
+			bool								m_visitChangesets;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename
