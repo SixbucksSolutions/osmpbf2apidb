@@ -1,7 +1,7 @@
 #include <cstdint>
 #include "LonLatCoordinate.hpp"
 
-namespace osmpbf2apidb
+namespace OsmFileParser
 {
     LonLatCoordinate::LonLatCoordinate():
         m_lon(0),

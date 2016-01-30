@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace osmpbf2apidb
+namespace OsmFileParser
 {
     class LonLatCoordinate
     {
