@@ -1,4 +1,5 @@
 .*.swp
 obj/
 bin/
-lib/
+lib/OsmFileParser/lib
+lib/OsmFileParser/obj
