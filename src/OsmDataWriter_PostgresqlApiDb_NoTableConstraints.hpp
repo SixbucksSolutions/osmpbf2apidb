@@ -53,6 +53,11 @@ namespace OsmDataWriter
                     return m_nodesVisited;
                 }
 
+                ::std::uint_fast64_t    getVisitedWays() const
+                {
+                    return m_waysVisited;
+                }
+
             protected:
                 ::std::mutex            m_visitNodeMutex;
                 ::std::mutex            m_visitWayMutex;

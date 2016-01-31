@@ -46,32 +46,32 @@ namespace OsmFileParser
 
 
             ::std::string retString(
-                "\t\tID        : " +
+                "\t\t\t\tID        : " +
                 ::boost::lexical_cast<::std::string>(getPrimitiveId()) +
                 "\n" +
 
-                "\t\tVersion   : " +
+                "\t\t\t\tVersion   : " +
                 ::boost::lexical_cast<::std::string>(getVersion()) +
                 "\n" +
 
-                "\t\tTimestamp : " +
+                "\t\t\t\tTimestamp : " +
                 ::boost::lexical_cast<::std::string>(getTimestamp()) +
                 dateStringStream.str() +
                 "\n" +
 
-                "\t\tChangeset : " +
+                "\t\t\t\tChangeset : " +
                 ::boost::lexical_cast<std::string>(getChangesetId()) +
                 "\n" +
 
-                "\t\tUser ID   : " +
+                "\t\t\t\tUser ID   : " +
                 ::boost::lexical_cast<std::string>(getUserId()) +
                 "\n" +
 
-                "\t\tUsername  : " +
+                "\t\t\t\tUsername  : " +
                 getUsername().toUtf8() +
                 "\n" +
 
-                "\t\tTags      : ");
+                "\t\t\t\tTags      : ");
 
             // Append tags
             if ( getTags().size() == 0 )
@@ -87,8 +87,8 @@ namespace OsmFileParser
                     tagIter != tags.cend();
                     ++tagIter )
                 {
-                    retString += "\n\t\t\tKey   : \"" + tagIter->getKey().toUtf8() +
-                                 "\"\n\t\t\tValue : \"" +
+                    retString += "\n\t\t\t\t\tKey   : \"" + tagIter->getKey().toUtf8() +
+                                 "\"\n\t\t\t\t\tValue : \"" +
                                  tagIter->getValue().toUtf8() + "\"\n";
                 }
 

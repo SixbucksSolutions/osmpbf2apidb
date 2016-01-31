@@ -142,6 +142,10 @@ namespace OsmFileParser
 
                 ::OsmFileParser::OsmPrimitive::PrimitiveTags&   tags
             );
+
+            ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs _parseWayNodeRefs(
+                const ::OSMPBF::Way&    way
+            );
     };
 }
 

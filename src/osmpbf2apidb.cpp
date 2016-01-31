@@ -30,8 +30,9 @@ int main(
 
         // We know once we're done with parse, all worker threads have safely terminated so no chance of
         //  race condition on following data
-        std::cout << ::std::endl << "Nodes visited: " << ::std::dec <<
-                  sqlFileWriter.getVisitedNodes() <<
+        std::cout << ::std::endl << "Nodes visited : " << ::std::dec <<
+                  sqlFileWriter.getVisitedNodes() << std::endl <<
+                  "Ways visited  : " << sqlFileWriter.getVisitedWays() <<
                   std::endl;
     }
     catch ( char const* const  e )

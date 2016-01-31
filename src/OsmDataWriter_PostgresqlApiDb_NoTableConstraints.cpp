@@ -12,9 +12,9 @@ namespace OsmDataWriter
     {
         NoTableConstraints::NoTableConstraints():
             m_visitNodeMutex(),
-			m_visitWayMutex(),
+            m_visitWayMutex(),
             m_nodesVisited(0),
-			m_waysVisited(0)
+            m_waysVisited(0)
         {
             ;
         }
@@ -55,12 +55,12 @@ namespace OsmDataWriter
                 ++m_waysVisited;
             }
 
-			if ( (m_waysVisited < 4) )
-			{
-				shouldPrint = true;
-			}
+            /*
+            if ( (m_waysVisited < 4) )
+            {
+                shouldPrint = true;
+            }
 
-			/*
             if ( way.getTags().size() > 0 )
             {
                 shouldPrint = true;

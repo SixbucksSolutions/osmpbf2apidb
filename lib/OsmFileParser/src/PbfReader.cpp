@@ -701,8 +701,10 @@ namespace OsmFileParser
     {
         const int numberOfWays = primitiveGroup.ways_size();
 
+        /*
         std::cout << "\t\t\tNumber of ways in primitive group: " <<
                   numberOfWays << std::endl;
+        */
 
         ::OsmFileParser::OsmPrimitive::Identifier       id(0);
         ::OsmFileParser::OsmPrimitive::Version          version(0);
@@ -745,6 +747,10 @@ namespace OsmFileParser
                 }
             }
 
+            // Read node refs for way
+            const ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs wayNodeRefs =
+                _parseWayNodeRefs(currWay);
+
             const ::OsmFileParser::OsmPrimitive::Way newWay(
                 id,
                 version,
@@ -752,10 +758,14 @@ namespace OsmFileParser
                 changesetId,
                 userId,
                 username,
-                tags);
+                tags,
+                wayNodeRefs);
 
             m_pPrimitiveVisitor->visit(newWay);
         }
+
+        std::cout << "\t\t\tAll " << numberOfWays <<
+                  " ways in primitive group visited" << std::endl;
     }
 
     bool PbfReader::_processPrimitiveInfo(
@@ -805,6 +815,7 @@ namespace OsmFileParser
         }
 
         tags.clear();
+        tags.reserve(keys.size());
 
         for ( int tagIndex = 0; tagIndex < keys.size(); ++tagIndex )
         {
@@ -817,6 +828,29 @@ namespace OsmFileParser
         }
 
         return true;
+    }
+
+    ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs
+    PbfReader::_parseWayNodeRefs(const ::OSMPBF::Way& way )
+    {
+        const int numWayNodeRefs = way.refs_size();
+        ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs wayNodeRefs(
+            numWayNodeRefs );
+
+        // Protocol uses delta encoding, have to remember previous value
+        ::OsmFileParser::OsmPrimitive::Identifier nodeId(0);
+
+        for (
+            int wayNodeRefIndex = 0;
+            wayNodeRefIndex < numWayNodeRefs;
+            ++wayNodeRefIndex )
+        {
+            nodeId += way.refs(wayNodeRefIndex);
+
+            wayNodeRefs.at( wayNodeRefIndex ) = nodeId;
+        }
+
+        return wayNodeRefs;
     }
 
 

@@ -26,6 +26,11 @@ namespace OsmFileParser
 
                 virtual ~Node() { }
 
+                virtual ::OsmFileParser::LonLatCoordinate getLonLat() const
+                {
+                    return m_lonLat;
+                }
+
                 virtual ::std::string toString() const;
 
             protected:

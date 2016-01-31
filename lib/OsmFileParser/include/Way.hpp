@@ -2,6 +2,7 @@
 #define _WAY_HPP
 
 #include <string>
+#include <vector>
 #include "Primitive.hpp"
 #include "Utf16String.hpp"
 
@@ -13,6 +14,8 @@ namespace OsmFileParser
         {
             public:
 
+                typedef ::std::vector<::OsmFileParser::OsmPrimitive::Identifier> WayNodeRefs;
+
                 Way(
                     const ::OsmFileParser::OsmPrimitive::Identifier     wayId,
                     const ::OsmFileParser::OsmPrimitive::Version        versionNumber,
@@ -20,15 +23,21 @@ namespace OsmFileParser
                     const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
                     const ::OsmFileParser::OsmPrimitive::UserId         userId,
                     const ::OsmFileParser::Utf16String&                 username,
-                    const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags );
+                    const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags,
+                    const ::std::vector <
+                    ::OsmFileParser::OsmPrimitive::Identifier > &     wayNodeRefs );
 
                 virtual ~Way() { }
+
+                virtual WayNodeRefs getWayNodeRefs() const
+                {
+                    return m_wayNodeRefs;
+                }
 
                 virtual ::std::string toString() const;
 
             protected:
-                //::OsmFileParser::LonLatCoordinate   m_lonLat;
-
+                WayNodeRefs m_wayNodeRefs;
         };
     }
 }
