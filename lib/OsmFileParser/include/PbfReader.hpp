@@ -7,7 +7,7 @@
 #include <osmpbf/osmpbf.h>
 #include "Utf16String.hpp"
 #include "Node.hpp"
-#include "DatablockWorklist.hpp"
+#include "../src/DatablockWorklist.hpp"
 #include "PrimitiveVisitor.hpp"
 
 namespace OsmFileParser
