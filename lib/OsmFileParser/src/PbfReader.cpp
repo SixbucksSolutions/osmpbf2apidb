@@ -26,6 +26,7 @@
 #include "PrimitiveVisitor.hpp"
 #include "Node.hpp"
 #include "Way.hpp"
+#include "Relation.hpp"
 
 namespace OsmFileParser
 {
@@ -852,7 +853,4 @@ namespace OsmFileParser
 
         return wayNodeRefs;
     }
-
-
-
 }

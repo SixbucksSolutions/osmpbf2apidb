@@ -33,7 +33,9 @@ int main(
         std::cout << ::std::endl << "Nodes visited : " << ::std::dec <<
                   sqlFileWriter.getVisitedNodes() << std::endl <<
                   "Ways visited  : " << sqlFileWriter.getVisitedWays() <<
-                  std::endl;
+                  std::endl <<
+				  "Relations visited: " << 
+				  	sqlFileWriter.getVisitedRelations() << std::endl;
     }
     catch ( char const* const  e )
     {

@@ -13,8 +13,10 @@ namespace OsmDataWriter
         NoTableConstraints::NoTableConstraints():
             m_visitNodeMutex(),
             m_visitWayMutex(),
+            m_visitRelationMutex(),
             m_nodesVisited(0),
-            m_waysVisited(0)
+            m_waysVisited(0),
+            m_relationsVisited(0)
         {
             ;
         }
@@ -56,21 +58,31 @@ namespace OsmDataWriter
             }
 
             /*
-            if ( (m_waysVisited < 4) )
-            {
-                shouldPrint = true;
-            }
-
             if ( way.getTags().size() > 0 )
             {
                 shouldPrint = true;
             }
             */
 
-
             if ( shouldPrint == true )
             {
                 std::cout << std::endl << way.toString() << std::endl;
+            }
+        }
+
+        void NoTableConstraints::visit(
+            const ::OsmFileParser::OsmPrimitive::Relation& relation )
+        {
+            bool shouldPrint(false);
+
+            {
+                ::std::lock_guard<::std::mutex> lock( m_visitRelationMutex );
+                ++m_relationsVisited;
+            }
+
+            if ( shouldPrint == true )
+            {
+                std::cout << std::endl << relation.toString() << std::endl;
             }
         }
 

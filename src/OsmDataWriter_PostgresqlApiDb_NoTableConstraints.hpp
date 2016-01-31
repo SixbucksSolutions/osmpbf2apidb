@@ -32,7 +32,7 @@ namespace OsmDataWriter
 
                 virtual bool shouldVisitRelations() const
                 {
-                    return false;
+                    return true;
                 }
 
                 virtual bool shouldVisitChangesets() const
@@ -48,6 +48,11 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Way&   way
                 );
 
+                virtual void visit(
+                    const ::OsmFileParser::OsmPrimitive::Relation&
+                    relation
+                );
+
                 ::std::uint_fast64_t    getVisitedNodes() const
                 {
                     return m_nodesVisited;
@@ -58,11 +63,18 @@ namespace OsmDataWriter
                     return m_waysVisited;
                 }
 
+                ::std::uint_fast64_t    getVisitedRelations() const
+                {
+                    return m_relationsVisited;
+                }
+
             protected:
                 ::std::mutex            m_visitNodeMutex;
                 ::std::mutex            m_visitWayMutex;
+                ::std::mutex            m_visitRelationMutex;
                 ::std::uint_fast64_t    m_nodesVisited;
                 ::std::uint_fast64_t    m_waysVisited;
+                ::std::uint_fast64_t    m_relationsVisited;
         };
 
     }
