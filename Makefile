@@ -16,7 +16,7 @@ all :
 	make bin/osmpbf2apidb
 
 bin/osmpbf2apidb : $(OBJ_FILES) lib/OsmFileParser/lib/libosmfileparser.a
-	$((ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)
+	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LD_LIBS)
 
 obj/%.o : src/%.cpp
