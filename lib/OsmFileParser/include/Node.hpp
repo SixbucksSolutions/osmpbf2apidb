@@ -7,31 +7,31 @@
 
 namespace OsmFileParser
 {
-namespace OsmPrimitive
-{
-class Node : public ::OsmFileParser::OsmPrimitive::Primitive
-{
-public:
+    namespace OsmPrimitive
+    {
+        class Node : public ::OsmFileParser::OsmPrimitive::Primitive
+        {
+            public:
 
-    Node(
-        const ::OsmFileParser::OsmPrimitive::Identifier     nodeId,
-        const ::OsmFileParser::OsmPrimitive::Version        versionNumber,
-        const ::OsmFileParser::OsmPrimitive::Timestamp      timestamp,
-        const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
-        const ::OsmFileParser::OsmPrimitive::UserId         userId,
-        const ::OsmFileParser::Utf16String&                 username,
-        const ::OsmFileParser::OsmPrimitive::PrimitiveTags&	tags,
-        const ::OsmFileParser::LonLatCoordinate&            lonLat );
+                Node(
+                    const ::OsmFileParser::OsmPrimitive::Identifier     nodeId,
+                    const ::OsmFileParser::OsmPrimitive::Version        versionNumber,
+                    const ::OsmFileParser::OsmPrimitive::Timestamp      timestamp,
+                    const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
+                    const ::OsmFileParser::OsmPrimitive::UserId         userId,
+                    const ::OsmFileParser::Utf16String&                 username,
+                    const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags,
+                    const ::OsmFileParser::LonLatCoordinate&            lonLat );
 
-    virtual ~Node() { }
+                virtual ~Node() { }
 
-    virtual ::std::string toString() const;
+                virtual ::std::string toString() const;
 
-protected:
-    ::OsmFileParser::LonLatCoordinate   m_lonLat;
+            protected:
+                ::OsmFileParser::LonLatCoordinate   m_lonLat;
 
-};
-}
+        };
+    }
 }
 
 #endif // _NODE
