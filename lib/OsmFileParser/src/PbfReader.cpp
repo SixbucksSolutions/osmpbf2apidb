@@ -342,7 +342,7 @@ namespace OsmFileParser
 
             if ( primitiveGroup.nodes_size() > 0 )
             {
-                std::cout << "\tPrimitive group " <<
+                std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains (regular) node entries" << std::endl;
 
@@ -352,12 +352,13 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
+                    std::cout << "\t\t\tSkipping as visitor doesn't care about nodes" <<
+                              std::endl;
                 }
             }
             else if ( primitiveGroup.has_dense() == true )
             {
-                std::cout << "\tPrimitive group " <<
+                std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains dense node entries" << std::endl;
 
@@ -367,12 +368,13 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\tSkipping as visitor doesn't care about nodes" << std::endl;
+                    std::cout << "\t\t\tSkipping as visitor doesn't care about nodes" <<
+                              std::endl;
                 }
             }
             else if ( primitiveGroup.ways_size() > 0 )
             {
-                std::cout << "\tPrimitive group " <<
+                std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains way entries" << std::endl;
 
@@ -382,13 +384,13 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\tSkipping as visitor doesn't care about ways" << std::endl;
+                    std::cout << "\t\t\tSkipping as visitor doesn't care about ways" << std::endl;
                 }
 
             }
             else if ( primitiveGroup.relations_size() > 0 )
             {
-                std::cout << "\tPrimitive group " <<
+                std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains relation entries" << std::endl;
 
@@ -398,13 +400,13 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\tSkipping as visitor doesn't care about relations" <<
+                    std::cout << "\t\t\tSkipping as visitor doesn't care about relations" <<
                               std::endl;
                 }
             }
             else if ( primitiveGroup.changesets_size() > 0 )
             {
-                std::cout << "\tPrimitive group " <<
+                std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains changeset entries" <<
                           std::endl;
@@ -415,13 +417,13 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\tSkipping as visitor doesn't care about changesets" <<
+                    std::cout << "\t\t\tSkipping as visitor doesn't care about changesets" <<
                               std::endl;
                 }
             }
             else
             {
-                throw ( "We read a primitive group, but it doesn't contain any entries in any of the valid types" );
+                throw ( "\t\tWe read a primitive group, but it doesn't contain any entries in any of the valid types" );
             }
 
         }
@@ -595,8 +597,10 @@ namespace OsmFileParser
         ::std::vector<::std::pair<int, ::OsmFileParser::OsmPrimitive::PrimitiveTags>>::const_iterator
                 tagIterator = nodeTags.begin();
 
+        /*
         std::cout << "\t\tFirst coordinate index with tags: " << std::dec <<
                   tagIterator->first << std::endl;
+        */
 
         // Iterate over node entries in the tables
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
@@ -655,7 +659,7 @@ namespace OsmFileParser
                 DatablockWorklist::CompressedDatablock currBlock =
                     worklist.getNextDatablock();
 
-                std::cout << "Worker thread " <<
+                std::cout << "\nWorker thread " <<
                           boost::lexical_cast<std::string>(workerId) <<
                           " working datablock starting at offset 0x" << std::hex <<
                           currBlock.offsetStart << std::endl;
