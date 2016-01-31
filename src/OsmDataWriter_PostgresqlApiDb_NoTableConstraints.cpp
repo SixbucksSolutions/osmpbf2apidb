@@ -27,12 +27,12 @@ namespace OsmDataWriter
                 ++m_nodesVisited;
             }
 
-            /*
+			/*
             if ( node.getTags().size() > 0 )
             {
                 shouldPrint = true;
             }
-            */
+			*/
 
 
             if ( shouldPrint == true )
