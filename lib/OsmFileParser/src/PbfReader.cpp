@@ -909,9 +909,14 @@ namespace OsmFileParser
             }
 
             // TODO: read relation members
-            const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
-            relationMembers(
-                _parseRelationMembers(currRelation, stringTable) );
+            ::OsmFileParser::OsmPrimitive::Relation::RelationMembers relationMembers(
+                currRelation.roles_sid_size() );
+
+            if ( _parseRelationMembers(
+                        currRelation, stringTable, relationMembers) == false )
+            {
+                throw "Could not parse relation members";
+            }
 
             const ::OsmFileParser::OsmPrimitive::Relation newRelation(
                 id,
@@ -920,20 +925,77 @@ namespace OsmFileParser
                 changesetId,
                 userId,
                 username,
-                tags );
+                tags,
+                relationMembers );
 
             m_pPrimitiveVisitor->visit(newRelation);
+
+            /*
+            std::cout << "\t\t\t\tMembers in relation: " <<
+                relationMembers.size() << std::endl;
+
+            break;
+            */
         }
 
         std::cout << "\t\t\tAll " << numberOfRelations <<
                   " relations in primitive group visited" << std::endl;
     }
 
-    const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
-    PbfReader::_parseRelationMembers(
-        const OSMPBF::Relation&                             currRelation,
-        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+    bool PbfReader::_parseRelationMembers(
+        const OSMPBF::Relation&                                     relation,
+        const ::std::vector<::OsmFileParser::Utf16String>&          stringTable,
+        ::OsmFileParser::OsmPrimitive::Relation::RelationMembers&   relationMembers )
     {
-        ;
+        const int numRelationMembers = relation.roles_sid_size();
+
+        // Sanity check arrays are parallel
+        if (
+            (relation.memids_size() != numRelationMembers) ||
+            (relation.types_size() != numRelationMembers) )
+        {
+            return false;
+        }
+
+        ::OsmFileParser::OsmPrimitive::Identifier idValue(0);   // Uses delta encoding
+
+        for ( int i = 0; i < numRelationMembers; ++i )
+        {
+            ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType memberType;
+
+            switch ( relation.types(i) )
+            {
+                case OSMPBF::Relation_MemberType_NODE :
+                    memberType =
+                        ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::NODE;
+                    break;
+
+                case OSMPBF::Relation_MemberType_WAY :
+                    memberType = ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::WAY;
+                    break;
+
+                case OSMPBF::Relation_MemberType_RELATION :
+                    memberType =
+                        ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::RELATION;
+                    break;
+
+                default :
+                    return false;
+                    break;
+            }
+
+            idValue += relation.memids(i);
+
+            ::OsmFileParser::OsmPrimitive::Relation::RelationMember currMember =
+            {
+                stringTable.at(relation.roles_sid(i)),  // member role
+                idValue,                                // member id
+                memberType                              // member type
+            };
+
+            relationMembers.at(i) = currMember;
+        }
+
+        return true;
     }
 }

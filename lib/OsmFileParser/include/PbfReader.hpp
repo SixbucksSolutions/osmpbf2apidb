@@ -152,10 +152,10 @@ namespace OsmFileParser
                 const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
             );
 
-            const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
-            _parseRelationMembers(
-                const OSMPBF::Relation& relation,
-                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+            bool _parseRelationMembers(
+                const OSMPBF::Relation&                                     relation,
+                const ::std::vector<::OsmFileParser::Utf16String>&          stringTable,
+                ::OsmFileParser::OsmPrimitive::Relation::RelationMembers&   relationMembers
             );
     };
 }

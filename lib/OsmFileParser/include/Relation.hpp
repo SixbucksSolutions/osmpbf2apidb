@@ -25,6 +25,7 @@ namespace OsmFileParser
                 {
                     ::OsmFileParser::Utf16String                memberRole;
                     ::OsmFileParser::OsmPrimitive::Identifier   memberId;
+                    RelationMemberType                          memberType;
                 };
 
                 typedef ::std::vector<RelationMember>   RelationMembers;
@@ -36,7 +37,8 @@ namespace OsmFileParser
                     const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
                     const ::OsmFileParser::OsmPrimitive::UserId         userId,
                     const ::OsmFileParser::Utf16String&                 username,
-                    const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags );
+                    const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags,
+                    const RelationMembers&                              members );
 
                 virtual ~Relation() { }
 
