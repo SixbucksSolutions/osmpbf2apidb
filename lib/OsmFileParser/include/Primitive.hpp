@@ -2,7 +2,9 @@
 #define _PRIMITIVE
 
 #include <cstdint>
+#include <vector>
 #include "Utf16String.hpp"
+#include "Tag.hpp"
 
 namespace OsmFileParser
 {
@@ -20,6 +22,8 @@ namespace OsmFileParser
         typedef ::std::int64_t Timestamp;
 
         typedef ::std::int32_t UserId;
+
+        typedef ::std::vector<::OsmFileParser::OsmPrimitive::Tag>   PrimitiveTags;
 
         /**
          * Base class for OSM primitive entities
@@ -94,36 +98,50 @@ namespace OsmFileParser
                     return m_username;
                 }
 
+                /**
+                 * Retrieve the tags for this primitive
+                 *
+                 * @return Tags stored in this primitive
+                 */
+                virtual ::OsmFileParser::OsmPrimitive::PrimitiveTags    getTags() const
+                {
+                    return m_tags;
+                }
+
                 virtual ::std::string toString() const;
 
             protected:
 
                 /// Primitive ID
-                ::OsmFileParser::OsmPrimitive::Identifier   m_primitiveId;
+                ::OsmFileParser::OsmPrimitive::Identifier       m_primitiveId;
 
                 /// Version number
-                ::OsmFileParser::OsmPrimitive::Version      m_versionNumber;
+                ::OsmFileParser::OsmPrimitive::Version          m_versionNumber;
 
                 /// Timestamp
-                ::OsmFileParser::OsmPrimitive::Timestamp    m_timestamp;
+                ::OsmFileParser::OsmPrimitive::Timestamp        m_timestamp;
 
                 /// Changeset number
-                ::OsmFileParser::OsmPrimitive::Identifier   m_changesetId;
+                ::OsmFileParser::OsmPrimitive::Identifier       m_changesetId;
 
                 /// User UID
-                ::OsmFileParser::OsmPrimitive::UserId       m_userId;
+                ::OsmFileParser::OsmPrimitive::UserId           m_userId;
 
                 /// User name
-                ::OsmFileParser::Utf16String                m_username;
+                ::OsmFileParser::Utf16String                    m_username;
+
+                /// Key/value tags
+                ::OsmFileParser::OsmPrimitive::PrimitiveTags    m_tags;
 
                 // Constructor to initialize values that child classes can leverage
                 Primitive(
-                    const Identifier    primitiveId,
-                    const Version       versionNumber,
-                    const Timestamp     timestamp,
-                    const Identifier    changesetId,
-                    const UserId        userId,
-                    const Utf16String&  username
+                    const Identifier        primitiveId,
+                    const Version           versionNumber,
+                    const Timestamp         timestamp,
+                    const Identifier        changesetId,
+                    const UserId            userId,
+                    const Utf16String&      username,
+                    const PrimitiveTags&    tags
                 );
 
 

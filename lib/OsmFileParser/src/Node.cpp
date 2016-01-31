@@ -16,9 +16,11 @@ namespace OsmFileParser
             const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,
             const ::OsmFileParser::OsmPrimitive::UserId         userId,
             const ::OsmFileParser::Utf16String&                 username,
+            const ::OsmFileParser::OsmPrimitive::PrimitiveTags& tags,
             const ::OsmFileParser::LonLatCoordinate&            lonLat ) :
 
-            Primitive(nodeId, versionNumber, timestamp, changesetId, userId, username),
+            Primitive(nodeId, versionNumber, timestamp, changesetId, userId, username,
+                      tags),
             m_lonLat(lonLat)
         {
             ;

@@ -497,14 +497,14 @@ namespace OsmFileParser
 
         // Uses delta encoding (only stores difference from corresponding value in
         //      previous node to save space due to variable-length integers in format)
-        ::OsmFileParser::OsmPrimitive::Identifier   id(0);
-        ::OsmFileParser::OsmPrimitive::Version      version(0);
-        ::OsmFileParser::OsmPrimitive::Timestamp    timestamp(0);
-        ::OsmFileParser::OsmPrimitive::Identifier   changesetId(0);
-        ::OsmFileParser::OsmPrimitive::UserId       userId(0);
-        ::std::int32_t                              usernameStringTableIndex(
-            0);
-        ::OsmFileParser::LonLatCoordinate           lonLat(0, 0);
+        ::OsmFileParser::OsmPrimitive::Identifier       id(0);
+        ::OsmFileParser::OsmPrimitive::Version          version(0);
+        ::OsmFileParser::OsmPrimitive::Timestamp        timestamp(0);
+        ::OsmFileParser::OsmPrimitive::Identifier       changesetId(0);
+        ::OsmFileParser::OsmPrimitive::UserId           userId(0);
+        ::std::int32_t                                  usernameStringTableIndex(0);
+        ::OsmFileParser::LonLatCoordinate               lonLat(0, 0);
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags    tags;
 
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
         {
@@ -528,6 +528,7 @@ namespace OsmFileParser
                     changesetId,
                     userId,
                     m_stringTable.at(usernameStringTableIndex),
+                    tags,
                     lonLat) );
         }
     }
