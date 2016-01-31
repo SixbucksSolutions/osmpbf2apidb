@@ -45,33 +45,57 @@ namespace OsmFileParser
                              timestamp.time_of_day().seconds();
 
 
-            return ::std::string(
-                       "\t\tID        : " +
-                       ::boost::lexical_cast<::std::string>(getPrimitiveId()) +
-                       "\n" +
+            ::std::string retString(
+                "\t\tID        : " +
+                ::boost::lexical_cast<::std::string>(getPrimitiveId()) +
+                "\n" +
 
-                       "\t\tVersion   : " +
-                       ::boost::lexical_cast<::std::string>(getVersion()) +
-                       "\n" +
+                "\t\tVersion   : " +
+                ::boost::lexical_cast<::std::string>(getVersion()) +
+                "\n" +
 
-                       "\t\tTimestamp : " +
-                       ::boost::lexical_cast<::std::string>(getTimestamp()) +
-                       dateStringStream.str() +
-                       "\n" +
+                "\t\tTimestamp : " +
+                ::boost::lexical_cast<::std::string>(getTimestamp()) +
+                dateStringStream.str() +
+                "\n" +
 
-                       "\t\tChangeset : " +
-                       ::boost::lexical_cast<std::string>(getChangesetId()) +
-                       "\n" +
+                "\t\tChangeset : " +
+                ::boost::lexical_cast<std::string>(getChangesetId()) +
+                "\n" +
 
-                       "\t\tUser ID   : " +
-                       ::boost::lexical_cast<std::string>(getUserId()) +
-                       "\n" +
+                "\t\tUser ID   : " +
+                ::boost::lexical_cast<std::string>(getUserId()) +
+                "\n" +
 
-                       "\t\tUsername  : " +
-                       getUsername().toUtf8() +
+                "\t\tUsername  : " +
+                getUsername().toUtf8() +
+                "\n" +
 
+                "\t\tTags      : ");
 
-                       "\n" );
+            // Append tags
+            if ( getTags().size() == 0 )
+            {
+                retString += "(none)\n";
+            }
+            else
+            {
+                const PrimitiveTags tags = getTags();
+
+                for (
+                    PrimitiveTags::const_iterator tagIter = tags.cbegin();
+                    tagIter != tags.cend();
+                    ++tagIter )
+                {
+                    retString += "\n\t\t\tKey   : \"" + tagIter->getKey().toUtf8() +
+                                 "\"\n\t\t\tValue : \"" +
+                                 tagIter->getValue().toUtf8() + "\"\n";
+                }
+
+                retString += "\n";
+            }
+
+            return retString;
         }
     }
 }

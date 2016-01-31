@@ -424,7 +424,6 @@ namespace OsmFileParser
                 throw ( "We read a primitive group, but it doesn't contain any entries in any of the valid types" );
             }
 
-            //break;
         }
 
         // Drop block-specific resources as quickly as possible
@@ -507,70 +506,97 @@ namespace OsmFileParser
         ::OsmFileParser::OsmPrimitive::PrimitiveTags    tags;
 
         const int numberKeysVals( denseNodes.keys_vals_size() );
-        // Map from **COORD INDEX** -> (tag key/value pair)
-        ::std::map<int, ::OsmFileParser::OsmPrimitive::PrimitiveTags> nodeTags;
+        // Vector of pairs showing **COORD INDEX** -> (tag key/value pair)
+        ::std::vector <
+        ::std::pair <
+        int, ::OsmFileParser::OsmPrimitive::PrimitiveTags >>
+                nodeTags;
 
-        if ( numberKeysVals > 0 )
+        // Length of keys_vals entry has to be LONGER than list size.
+        //      Every coordinate has at least one entry even if it's blank,
+        //      and every key value pair above that adds even more
+        if ( numberKeysVals < listSize )
         {
-            std::cout << "\t\tDense nodes section contains " << std::dec <<
-                      denseNodes.keys_vals_size() << " entries in keys_vals" << std::endl;
+            throw ( "Invalid tags entries for dense nodes" );
+        }
 
-            // Have to iterate over tags first as they have to be ready to be add into nodes
-            int tagCoordIndex(0);
-            int keysValsIndex = 0;
-            ::OsmFileParser::OsmPrimitive::PrimitiveTags currNodeTags;
+        /*
+           std::cout << "\t\tDense nodes section contains " << std::dec <<
+           denseNodes.keys_vals_size() << " entries in keys_vals" << std::endl;
+         */
 
-            while ( keysValsIndex < numberKeysVals )
+        // Have to iterate over tags first as they have to be ready to be add into nodes
+        int tagCoordIndex(0);
+        int keysValsIndex = 0;
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags currNodeTags;
+
+        while ( keysValsIndex < numberKeysVals )
+        {
+            // End of tags for a given node will be signaled by a string ID of 0;
+            const int stringId = denseNodes.keys_vals(keysValsIndex);
+
+            if ( stringId == 0 )
             {
-                // End of tags for a given node will be signaled by a string ID of 0;
-                const int stringId = denseNodes.keys_vals(keysValsIndex);
-
-                if ( stringId == 0 )
+                // If there are values in the list of tags for current node, add to
+                //      master set.
+                if ( currNodeTags.size() > 0 )
                 {
-                    // If there are values in the list of tags for current node, add to
-                    //      master set.
-                    //
-                    // Use insert hint of "end of list" as we know it's always added at end. In
-                    //      C++11 the correct hint is the entry AFTER where we want to insert,
-                    //      so for us that's the end of list marker
-                    if ( currNodeTags.size() > 0 )
-                    {
-                        nodeTags.insert( nodeTags.end(),
-                                         std::pair<int, ::OsmFileParser::OsmPrimitive::PrimitiveTags>(
-                                             tagCoordIndex, currNodeTags) );
-                        /*
-                        std::cout << "\t\tDuring tag parsing, found " <<
-                            currNodeTags.size() << " tags for coord index " <<
-                            tagCoordIndex << std::endl;
-                        */
+                    nodeTags.push_back(
+                        std::pair <
+                        int,
+                        ::OsmFileParser::OsmPrimitive::PrimitiveTags > (
+                            tagCoordIndex, currNodeTags) );
 
-                        // Clear out contents of curr tags as we're switching to next node
-                        currNodeTags.clear();
-                    }
-
-                    // Added all the tags for current coord, update COORD index
-                    tagCoordIndex++;
-
-                    // Have processed one value from keys_vals, so update that index as well
-                    keysValsIndex++;
+                    // Clear out contents of curr tags as we're switching to next node
+                    currNodeTags.clear();
                 }
-                else
-                {
-                    // Next two values in sequence are string ID of key and value, respectively
-                    ::OsmFileParser::Utf16String    key;
-                    ::OsmFileParser::Utf16String    value;
-                    key = m_stringTable.at(stringId);
-                    value = m_stringTable.at(denseNodes.keys_vals(keysValsIndex + 1));
-                    currNodeTags.push_back( ::OsmFileParser::OsmPrimitive::Tag(key, value) );
 
-                    // We've read two values out of keys vals sequence
-                    keysValsIndex += 2;
-                }
+                // Added all the tags for current coord, update COORD index
+                tagCoordIndex++;
+
+                // Have processed one value from keys_vals, so update that index as well
+                keysValsIndex++;
+            }
+            else
+            {
+                // Next two values in sequence are string ID of key and value, respectively
+                const ::OsmFileParser::Utf16String    key =
+                    m_stringTable.at(stringId);
+                const ::OsmFileParser::Utf16String    value =
+                    m_stringTable.at(denseNodes.keys_vals(keysValsIndex + 1));
+
+                /*
+                std::cout << "\t\tTrying to parse tag\n" <<
+                          "\t\t\tKey   at string table index " << stringId << "\n" <<
+                          "\t\t\tValue at string table index " <<
+                          denseNodes.keys_vals(keysValsIndex + 1) << "\n";
+
+                std::cout << "\t\tPossible key   string: " <<
+                          key.toUtf8() << "\n" <<
+                          "\t\tPossible value string: " <<
+                          value.toUtf8() << "\n";
+                */
+
+                // Create key/tag value
+                const ::OsmFileParser::OsmPrimitive::Tag newTag(key, value);
+                /*
+                std::cout << "\t\tKey   in tag: " << newTag.getKey().toUtf8() << "\n" <<
+                          "\t\tValue in tag: " << newTag.getValue().toUtf8() << "\n" <<
+                          std::endl;
+                */
+
+                currNodeTags.push_back( newTag );
+
+                // We've read two values out of keys vals sequence
+                keysValsIndex += 2;
             }
         }
 
-        ::std::map<int, ::OsmFileParser::OsmPrimitive::PrimitiveTags>::const_iterator
-        tagIterator = nodeTags.begin();
+        ::std::vector<::std::pair<int, ::OsmFileParser::OsmPrimitive::PrimitiveTags>>::const_iterator
+                tagIterator = nodeTags.begin();
+
+        std::cout << "\t\tFirst coordinate index with tags: " << std::dec <<
+                  tagIterator->first << std::endl;
 
         // Iterate over node entries in the tables
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
@@ -592,9 +618,6 @@ namespace OsmFileParser
             {
                 tags = tagIterator->second;
                 tagIterator++;
-
-                std::cout << "\t\tNode " << id << " is being added with " <<
-                          tags.size() << " tags" << std::endl;
             }
 
             m_pPrimitiveVisitor->visit(
@@ -608,7 +631,10 @@ namespace OsmFileParser
                     tags,
                     lonLat) );
 
-            tags.clear();
+            if ( tags.size() > 0 )
+            {
+                tags.clear();
+            }
         }
     }
 

@@ -26,6 +26,7 @@ namespace OsmFileParser
             ;
         }
 
+
         ::std::string Node::toString() const
         {
             std::int_fast32_t lon;

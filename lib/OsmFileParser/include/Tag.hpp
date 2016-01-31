@@ -11,8 +11,8 @@ namespace OsmFileParser
         {
             public:
                 Tag(
-                    ::OsmFileParser::Utf16String&   key,
-                    ::OsmFileParser::Utf16String&   value
+                    const ::OsmFileParser::Utf16String&   key,
+                    const ::OsmFileParser::Utf16String&   value
                 );
 
                 virtual ~Tag() { }

@@ -6,8 +6,8 @@ namespace OsmFileParser
     namespace OsmPrimitive
     {
         Tag::Tag(
-            ::OsmFileParser::Utf16String&   key,
-            ::OsmFileParser::Utf16String&   value ):
+            const ::OsmFileParser::Utf16String&   key,
+            const ::OsmFileParser::Utf16String&   value ):
 
             m_key(key),
             m_value(value)
