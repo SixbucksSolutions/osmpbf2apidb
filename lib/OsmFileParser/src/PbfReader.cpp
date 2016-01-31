@@ -402,7 +402,7 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitRelations() == true )
                 {
-                    throw ( "Relations not implemented yet" );
+                    _processRelations( primitiveGroup, stringTable );
                 }
                 else
                 {
@@ -852,5 +852,88 @@ namespace OsmFileParser
         }
 
         return wayNodeRefs;
+    }
+
+    void PbfReader::_processRelations(
+        const OSMPBF::PrimitiveGroup&                       primitiveGroup,
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+    {
+        const int numberOfRelations = primitiveGroup.relations_size();
+
+        std::cout << "\t\t\tNumber of relations in primitive group: " <<
+                  numberOfRelations << std::endl;
+
+        ::OsmFileParser::OsmPrimitive::Identifier       id(0);
+        ::OsmFileParser::OsmPrimitive::Version          version(0);
+        ::OsmFileParser::OsmPrimitive::Timestamp        timestamp(0);
+        ::OsmFileParser::OsmPrimitive::Identifier       changesetId(0);
+        ::OsmFileParser::OsmPrimitive::UserId           userId(0);
+        ::OsmFileParser::Utf16String                    username;
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags    tags;
+
+        for (
+            int relationIndex = 0;
+            relationIndex < numberOfRelations;
+            ++relationIndex )
+        {
+            const ::OSMPBF::Relation currRelation = primitiveGroup.relations(
+                    relationIndex);
+
+            id = currRelation.id();
+
+            // Sanity check data to make sure we have full set of info we need
+            if ( currRelation.has_info() == false )
+            {
+                throw ( "Relation section does not have info section which we need" );
+            }
+
+            if ( _processPrimitiveInfo(
+                        stringTable,
+                        currRelation.info(),
+                        version,
+                        timestamp,
+                        changesetId,
+                        userId,
+                        username) == false )
+            {
+                throw ( "Optional info section for relationis missing data we need" );
+            }
+
+            if ( currRelation.keys_size() > 0 )
+            {
+                if ( _parseTags(
+                            stringTable, currRelation.keys(), currRelation.vals(), tags) == false )
+                {
+                    throw ( "Could not parse tags for relation" );
+                }
+            }
+
+            // TODO: read relation members
+            const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
+            relationMembers(
+                _parseRelationMembers(currRelation, stringTable) );
+
+            const ::OsmFileParser::OsmPrimitive::Relation newRelation(
+                id,
+                version,
+                timestamp,
+                changesetId,
+                userId,
+                username,
+                tags );
+
+            m_pPrimitiveVisitor->visit(newRelation);
+        }
+
+        std::cout << "\t\t\tAll " << numberOfRelations <<
+                  " relations in primitive group visited" << std::endl;
+    }
+
+    const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
+    PbfReader::_parseRelationMembers(
+        const OSMPBF::Relation&                             currRelation,
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+    {
+        ;
     }
 }

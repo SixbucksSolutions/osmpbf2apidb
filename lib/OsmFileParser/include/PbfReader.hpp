@@ -146,6 +146,17 @@ namespace OsmFileParser
             ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs _parseWayNodeRefs(
                 const ::OSMPBF::Way&    way
             );
+
+            void _processRelations(
+                const OSMPBF::PrimitiveGroup&                       primitiveGroup,
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+            );
+
+            const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
+            _parseRelationMembers(
+                const OSMPBF::Relation& relation,
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+            );
     };
 }
 
