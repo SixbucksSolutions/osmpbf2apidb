@@ -504,7 +504,11 @@ namespace OsmFileParser
         ::OsmFileParser::OsmPrimitive::UserId           userId(0);
         ::std::int32_t                                  usernameStringTableIndex(0);
         ::OsmFileParser::LonLatCoordinate               lonLat(0, 0);
-        ::OsmFileParser::OsmPrimitive::PrimitiveTags    tags;
+
+        // NOTE: per the protobuf definition, dense_nodes can ONLY be used if none of
+        //      the nodes in the group have tags, so that's why we don't try to add
+        //      them -- they cannot exist
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags    emptyTags;
 
         for ( int coordIndex = 0; coordIndex < listSize; ++coordIndex )
         {
@@ -528,7 +532,7 @@ namespace OsmFileParser
                     changesetId,
                     userId,
                     m_stringTable.at(usernameStringTableIndex),
-                    tags,
+                    emptyTags,
                     lonLat) );
         }
     }
