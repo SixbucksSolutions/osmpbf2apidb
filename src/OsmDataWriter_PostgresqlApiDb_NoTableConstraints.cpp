@@ -79,10 +79,12 @@ namespace OsmDataWriter
                 ::std::lock_guard<::std::mutex> lock( m_visitRelationMutex );
                 ++m_relationsVisited;
 
+                /*
                 if ( m_relationsVisited < 4 )
                 {
                     shouldPrint = true;
                 }
+                */
             }
 
             if ( shouldPrint == true )

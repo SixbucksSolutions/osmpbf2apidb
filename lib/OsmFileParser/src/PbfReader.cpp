@@ -657,7 +657,7 @@ namespace OsmFileParser
     {
         try
         {
-            std::cout << "Worker thread " <<
+            std::cout << "\nWorker thread " <<
                       boost::lexical_cast<std::string>(workerId) << " started!" <<
                       std::endl;
 
@@ -678,7 +678,7 @@ namespace OsmFileParser
             }
 
 
-            std::cout << "Worker thread " <<
+            std::cout << "\nWorker thread " <<
                       boost::lexical_cast<std::string>(workerId) <<
                       " terminating normally!" << std::endl;
         }
@@ -860,8 +860,10 @@ namespace OsmFileParser
     {
         const int numberOfRelations = primitiveGroup.relations_size();
 
+        /*
         std::cout << "\t\t\tNumber of relations in primitive group: " <<
                   numberOfRelations << std::endl;
+        */
 
         ::OsmFileParser::OsmPrimitive::Identifier       id(0);
         ::OsmFileParser::OsmPrimitive::Version          version(0);

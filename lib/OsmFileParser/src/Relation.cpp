@@ -39,27 +39,30 @@ namespace OsmFileParser
                 ++relationMemberIter )
             {
                 relationMembersString += std::string("\n") +
-                    "\t\t\t\t\tRole: " + relationMemberIter->memberRole.toUtf8() + "\n" +
-                    "\t\t\t\t\t  ID: " +
-                    boost::lexical_cast<std::string>(
-                        relationMemberIter->memberId) + "\n" +
-					"\t\t\t\t\tType: ";
+                                         "\t\t\t\t\tRole: " + relationMemberIter->memberRole.toUtf8() + "\n" +
+                                         "\t\t\t\t\t  ID: " +
+                                         boost::lexical_cast<std::string>(
+                                             relationMemberIter->memberId) + "\n" +
+                                         "\t\t\t\t\tType: ";
 
-				switch ( relationMemberIter->memberType )
-				{
-					case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::NODE:
-						relationMembersString += "Node\n";
-						break;
-					case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::WAY:
-						relationMembersString += "Way\n";
-						break;
-					case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::RELATION:
-						relationMembersString += "Relation\n";
-						break;
-					default:
-						throw( "Invalid member type" );
-						break;
-				}
+                switch ( relationMemberIter->memberType )
+                {
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::NODE:
+                        relationMembersString += "Node\n";
+                        break;
+
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::WAY:
+                        relationMembersString += "Way\n";
+                        break;
+
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::RELATION:
+                        relationMembersString += "Relation\n";
+                        break;
+
+                    default:
+                        throw ( "Invalid member type" );
+                        break;
+                }
 
 
 
