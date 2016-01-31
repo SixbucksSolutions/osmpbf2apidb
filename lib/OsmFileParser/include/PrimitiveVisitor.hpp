@@ -3,6 +3,7 @@
 
 #include "Primitive.hpp"
 #include "Node.hpp"
+#include "Way.hpp"
 
 namespace OsmFileParser
 {
@@ -66,7 +67,9 @@ namespace OsmFileParser
               * @note Implementers MUST make this method thread-safe if the ::parse() method is
               *      invoked with number of workers set to be greater than one
               */
-            //virtual void visit( const ::OsmFileParser::OsmPrimitive::Way& way ) = 0;
+            virtual void visit(
+                const ::OsmFileParser::OsmPrimitive::Way& way
+            ) = 0;
 
             /**
               * Visit method for Relations

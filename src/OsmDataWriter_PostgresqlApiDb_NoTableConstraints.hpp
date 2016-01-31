@@ -6,6 +6,7 @@
 #include "OsmFileParser/include/Primitive.hpp"
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
+#include "OsmFileParser/include/Way.hpp"
 
 namespace OsmDataWriter
 {
@@ -26,7 +27,7 @@ namespace OsmDataWriter
 
                 virtual bool shouldVisitWays() const
                 {
-                    return false;
+                    return true;
                 }
 
                 virtual bool shouldVisitRelations() const
@@ -43,14 +44,20 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Node& node
                 );
 
+                virtual void visit(
+                    const ::OsmFileParser::OsmPrimitive::Way&   way
+                );
+
                 ::std::uint_fast64_t    getVisitedNodes() const
                 {
                     return m_nodesVisited;
                 }
 
             protected:
-                ::std::mutex            m_visitDataMutex;
+                ::std::mutex            m_visitNodeMutex;
+                ::std::mutex            m_visitWayMutex;
                 ::std::uint_fast64_t    m_nodesVisited;
+                ::std::uint_fast64_t    m_waysVisited;
         };
 
     }

@@ -57,7 +57,6 @@ namespace OsmFileParser
 
             std::uint64_t                               m_pbfFileSizeInBytes;
             char*                                       m_pMemoryMappedBuffer;
-            std::vector<::OsmFileParser::Utf16String>   m_stringTable;
             ::OsmFileParser::PrimitiveVisitor*          m_pPrimitiveVisitor;
             bool                                        m_visitNodes;
             bool                                        m_visitWays;
@@ -102,13 +101,13 @@ namespace OsmFileParser
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
 
-            void _generateStringTable(
+            ::std::vector<::OsmFileParser::Utf16String> _generateStringTable(
                 const OSMPBF::PrimitiveBlock&   primitiveBlock
             );
 
             void _processDenseNodes(
-                const OSMPBF::DenseNodes&       denseNodes,
-                const OSMPBF::PrimitiveBlock&   primitiveBlock
+                const OSMPBF::DenseNodes&                           denseNodes,
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
             );
 
             void _processWorklist(
@@ -116,6 +115,33 @@ namespace OsmFileParser
                 DatablockWorklist&  worklist
             );
 
+            void _processWays(
+                const OSMPBF::PrimitiveGroup&                       primitiveGroup,
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+            );
+
+            bool _processPrimitiveInfo(
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+                const OSMPBF::Info&                                 infoBlock,
+
+                ::OsmFileParser::OsmPrimitive::Version&             version,
+                ::OsmFileParser::OsmPrimitive::Timestamp&           timestamp,
+                ::OsmFileParser::OsmPrimitive::Identifier&          changesetId,
+                ::OsmFileParser::OsmPrimitive::UserId&              userId,
+                ::OsmFileParser::Utf16String&                       username
+            );
+
+            bool _parseTags(
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+
+                const ::google::protobuf::RepeatedField <
+                ::google::protobuf::uint32 > & keys,
+
+                const ::google::protobuf::RepeatedField <
+                ::google::protobuf::uint32 > & values,
+
+                ::OsmFileParser::OsmPrimitive::PrimitiveTags&   tags
+            );
     };
 }
 

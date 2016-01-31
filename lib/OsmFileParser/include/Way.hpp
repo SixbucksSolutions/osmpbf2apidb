@@ -14,7 +14,7 @@ namespace OsmFileParser
             public:
 
                 Way(
-                    const ::OsmFileParser::OsmPrimitive::Identifier     nodeId,
+                    const ::OsmFileParser::OsmPrimitive::Identifier     wayId,
                     const ::OsmFileParser::OsmPrimitive::Version        versionNumber,
                     const ::OsmFileParser::OsmPrimitive::Timestamp      timestamp,
                     const ::OsmFileParser::OsmPrimitive::Identifier     changesetId,

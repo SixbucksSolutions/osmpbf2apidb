@@ -28,7 +28,7 @@ namespace OsmFileParser
 
         ::std::string Way::toString() const
         {
-            ;
+            return Primitive::toString();
         }
     }
 }

@@ -25,13 +25,13 @@
 #include "Primitive.hpp"
 #include "PrimitiveVisitor.hpp"
 #include "Node.hpp"
+#include "Way.hpp"
 
 namespace OsmFileParser
 {
     PbfReader::PbfReader():
         m_pbfFileSizeInBytes(0),
         m_pMemoryMappedBuffer(nullptr),
-        m_stringTable(),
         m_pPrimitiveVisitor(nullptr),
         m_visitNodes(false),
         m_visitWays(false),
@@ -314,7 +314,12 @@ namespace OsmFileParser
     {
         // NOTE: strings are stored in PBF in UTF8, we store in UTF16 internally,
         //      serializing out to UTF8 again on the way out
-        _generateStringTable( primitiveBlock );
+        //
+        // NOTE: do not try to store string table as a member variable of the class.
+        //      Think multi-threaded.  Multiple execution threads, each working their
+        //      own blocks, the table is block-specific... yeah you get it.
+        std::vector<::OsmFileParser::Utf16String> stringTable =
+            _generateStringTable( primitiveBlock );
 
         /**
          * Per PBF spec, the primitive group will have all its elements in the same
@@ -364,7 +369,7 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
                 {
-                    _processDenseNodes( primitiveGroup.dense(), primitiveBlock );
+                    _processDenseNodes( primitiveGroup.dense(), stringTable );
                 }
                 else
                 {
@@ -380,7 +385,7 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitWays() == true )
                 {
-                    throw ( "Ways not implemented yet" );
+                    _processWays( primitiveGroup, stringTable );
                 }
                 else
                 {
@@ -427,18 +432,17 @@ namespace OsmFileParser
             }
 
         }
-
-        // Drop block-specific resources as quickly as possible
-        m_stringTable.clear();
     }
 
-    void PbfReader::_generateStringTable(
+
+    ::std::vector<::OsmFileParser::Utf16String> PbfReader::_generateStringTable(
         const OSMPBF::PrimitiveBlock&   primitiveBlock )
     {
-        const OSMPBF::StringTable& st = primitiveBlock.stringtable();
+        const OSMPBF::StringTable& pbfStringTable = primitiveBlock.stringtable();
+        ::std::vector<::OsmFileParser::Utf16String> utf16StringTable;
 
         // Can reserve exact space needed for vector up front
-        const unsigned int numStrings = st.s_size();
+        const unsigned int numStrings = pbfStringTable.s_size();
 
         std::cout << "\tNumber string table entries: " <<
                   boost::lexical_cast<std::string>(numStrings) << std::endl;
@@ -446,12 +450,11 @@ namespace OsmFileParser
         // *** IMPORTANT NOTE ***
         //      PBF Strings are in UTF-8, we convert to UTF-16 internally,
         //      then serialize back out to UTF-8 on the way out
-        m_stringTable.clear();
         Utf16String utf16String;
 
         for ( unsigned int i = 0; i < numStrings; ++i )
         {
-            const std::string currString = st.s().Get(i);
+            const std::string currString = pbfStringTable.s().Get(i);
 
             utf16String.clear();
 
@@ -464,13 +467,15 @@ namespace OsmFileParser
                 throw ( "String from string table contained invalid UTF-8 sequence" );
             }
 
-            m_stringTable.push_back(utf16String);
+            utf16StringTable.push_back(utf16String);
         }
+
+        return utf16StringTable;
     }
 
     void PbfReader::_processDenseNodes(
-        const OSMPBF::DenseNodes&       denseNodes,
-        const OSMPBF::PrimitiveBlock&   primitiveBlock )
+        const OSMPBF::DenseNodes&                           denseNodes,
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable  )
     {
         // Make sure we have dense info as we need info from it (changeset, timestamp, etc.)
         if ( denseNodes.has_denseinfo() == false )
@@ -563,9 +568,9 @@ namespace OsmFileParser
             {
                 // Next two values in sequence are string ID of key and value, respectively
                 const ::OsmFileParser::Utf16String    key =
-                    m_stringTable.at(stringId);
+                    stringTable.at(stringId);
                 const ::OsmFileParser::Utf16String    value =
-                    m_stringTable.at(denseNodes.keys_vals(keysValsIndex + 1));
+                    stringTable.at(denseNodes.keys_vals(keysValsIndex + 1));
 
                 /*
                 std::cout << "\t\tTrying to parse tag\n" <<
@@ -631,7 +636,7 @@ namespace OsmFileParser
                     timestamp,
                     changesetId,
                     userId,
-                    m_stringTable.at(usernameStringTableIndex),
+                    stringTable.at(usernameStringTableIndex),
                     tags,
                     lonLat) );
 
@@ -640,6 +645,9 @@ namespace OsmFileParser
                 tags.clear();
             }
         }
+
+        std::cout << "\t\t\tAll " << std::dec << listSize <<
+                  " nodes in primitive group visited" << std::endl;
     }
 
     void PbfReader::_processWorklist(
@@ -686,5 +694,131 @@ namespace OsmFileParser
             std::cerr << "Worker thread threw unknown exception" << std::endl;
         }
     }
+
+    void PbfReader::_processWays(
+        const OSMPBF::PrimitiveGroup&                       primitiveGroup,
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+    {
+        const int numberOfWays = primitiveGroup.ways_size();
+
+        std::cout << "\t\t\tNumber of ways in primitive group: " <<
+                  numberOfWays << std::endl;
+
+        ::OsmFileParser::OsmPrimitive::Identifier       id(0);
+        ::OsmFileParser::OsmPrimitive::Version          version(0);
+        ::OsmFileParser::OsmPrimitive::Timestamp        timestamp(0);
+        ::OsmFileParser::OsmPrimitive::Identifier       changesetId(0);
+        ::OsmFileParser::OsmPrimitive::UserId           userId(0);
+        ::OsmFileParser::Utf16String                    username;
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags    tags;
+
+        for ( int wayIndex = 0; wayIndex < numberOfWays; ++wayIndex )
+        {
+            const ::OSMPBF::Way currWay = primitiveGroup.ways(wayIndex);
+
+            id = currWay.id();
+
+            // Sanity check data to make sure we have full set of info we need
+            if ( currWay.has_info() == false )
+            {
+                throw ( "Way section does not have info section which we need" );
+            }
+
+            if ( _processPrimitiveInfo(
+                        stringTable,
+                        currWay.info(),
+                        version,
+                        timestamp,
+                        changesetId,
+                        userId,
+                        username) == false )
+            {
+                throw ( "Optional info section for way is missing data we need" );
+            }
+
+            if ( currWay.keys_size() > 0 )
+            {
+                if ( _parseTags(
+                            stringTable, currWay.keys(), currWay.vals(), tags) == false )
+                {
+                    throw ( "Could not parse tags for way" );
+                }
+            }
+
+            const ::OsmFileParser::OsmPrimitive::Way newWay(
+                id,
+                version,
+                timestamp,
+                changesetId,
+                userId,
+                username,
+                tags);
+
+            m_pPrimitiveVisitor->visit(newWay);
+        }
+    }
+
+    bool PbfReader::_processPrimitiveInfo(
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+        const OSMPBF::Info&                                 infoBlock,
+
+        ::OsmFileParser::OsmPrimitive::Version&             version,
+        ::OsmFileParser::OsmPrimitive::Timestamp&           timestamp,
+        ::OsmFileParser::OsmPrimitive::Identifier&          changesetId,
+        ::OsmFileParser::OsmPrimitive::UserId&              userId,
+        ::OsmFileParser::Utf16String&                       username )
+    {
+        if (
+            (infoBlock.has_version() == false ) ||
+            (infoBlock.has_timestamp() == false) ||
+            (infoBlock.has_changeset() == false) ||
+            (infoBlock.has_uid() == false) ||
+            (infoBlock.has_user_sid() == false) )
+        {
+            return false;
+        }
+
+        version         = infoBlock.version();
+        timestamp       = infoBlock.timestamp();
+        changesetId     = infoBlock.changeset();
+        userId          = infoBlock.uid();
+        username        = stringTable.at(infoBlock.user_sid());
+
+        return true;
+    }
+
+    bool PbfReader::_parseTags(
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+
+        const ::google::protobuf::RepeatedField <
+        ::google::protobuf::uint32 > & keys,
+
+        const ::google::protobuf::RepeatedField <
+        ::google::protobuf::uint32 > & values,
+
+        ::OsmFileParser::OsmPrimitive::PrimitiveTags&   tags )
+    {
+        // Sanity check the parallel lists
+        if ( (keys.size() != values.size()) )
+        {
+            return false;
+        }
+
+        tags.clear();
+
+        for ( int tagIndex = 0; tagIndex < keys.size(); ++tagIndex )
+        {
+            tags.push_back(
+                ::OsmFileParser::OsmPrimitive::Tag(
+                    stringTable.at(keys.Get(tagIndex)),
+                    stringTable.at(values.Get(tagIndex))
+                )
+            );
+        }
+
+        return true;
+    }
+
+
 
 }
