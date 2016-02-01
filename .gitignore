@@ -3,3 +3,4 @@ obj/
 bin/
 lib/OsmFileParser/lib
 lib/OsmFileParser/obj
+dep/

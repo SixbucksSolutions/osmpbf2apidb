@@ -36,3 +36,4 @@ namespace OsmFileParser
 }
 
 #endif // _TAG_HPP
+
