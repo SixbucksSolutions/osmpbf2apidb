@@ -1,5 +1,5 @@
 CC=ccache g++
-CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -Ilib
+CPPFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -g -Ilib
 LD=g++
 LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf 
 CPP_FILES := $(wildcard src/*.cpp) 

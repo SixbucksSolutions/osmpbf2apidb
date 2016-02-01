@@ -1,5 +1,5 @@
 CXX = ccache g++
-CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O -Iinclude/
+CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -g -Iinclude/
 
 SRCDIR := src
 SRCS := $(wildcard $(SRCDIR)/*.cpp)

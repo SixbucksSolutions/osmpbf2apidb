@@ -624,7 +624,8 @@ namespace OsmFileParser
                 denseNodes.lat().Get(coordIndex) );
 
             // Do we have tags for this node?
-            if ( coordIndex == tagIterator->first )
+            if ( (tagIterator != nodeTags.end()) &&
+                    (coordIndex == tagIterator->first) )
             {
                 tags = tagIterator->second;
                 tagIterator++;
