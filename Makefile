@@ -41,7 +41,7 @@ clean :
 
 # What this magic is doing
 #
-#   Starting point:
+#   Starting point: 
 #			src/foo.cpp 	src/bar.cpp
 #
 #	Desired ending point:
@@ -50,17 +50,17 @@ clean :
 # 	$(CPP_FILES:.cpp=.d)  : takes list of all .cpp files,
 #			changes each ".cpp" extension to ".d"
 #
-#			Before : src/bar.cpp
-#			After  : src/bar.d
+#			Before : "src/foo.cpp src/bar.cpp"
+#			After  : "src/foo.d   src/bar.d"
 #			
 #   $(notdir ... )   : Drop "src/" directory info before filename
 #
-#			Before : src/bar.d
-#			After  : bar.d
+#			Before : "src/foo.d   src/bar.d"
+#			After  : "foo.d       bar.d"
 #
 # 	$(addprefix ...) : prepends "dep/" to filename, 
 #
-#			Before : bar.d
-#			After  : dep/bar.d
+#			Before : "foo.d		  bar.d"
+#			After  : "dep/foo.d   dep/bar.d"
 # 
 -include $(addprefix $(DEPDIR)/,$(notdir $(CPP_FILES:.cpp=.d)))
