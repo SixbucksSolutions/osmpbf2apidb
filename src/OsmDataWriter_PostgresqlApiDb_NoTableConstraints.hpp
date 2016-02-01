@@ -82,3 +82,4 @@ namespace OsmDataWriter
 }
 
 #endif // _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS
+

@@ -1,14 +1,3 @@
-#CXX=ccache g++
-#CXXFLAGS=-Wall -Wextra -std=c++11 -Wpedantic -O -Iinclude/
-#HPP_FILES := $(wildcard include/*.hpp) $(wildcard src/*.hpp)
-#CPP_FILES := $(wildcard src/*.cpp)
-#SOURCE_FILES := $(HPP_FILES) $(CPP_FILES)
-#OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
-#ASTYLE=astyle
-#ASTYLE_FLAGS=--options=astyle.cfg
-#AR := ar
-#AR_FLAGS := -cvq
-
 CXX = ccache g++
 CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O -Iinclude/
 

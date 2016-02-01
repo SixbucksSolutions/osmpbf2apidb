@@ -43,3 +43,4 @@ namespace OsmFileParser
 }
 
 #endif // _WAY_HPP
+
