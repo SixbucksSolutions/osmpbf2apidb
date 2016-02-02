@@ -29,9 +29,6 @@ all :
 $(BIN_DIR)/osmpbf2apidb : $(OBJ_FILES) $(OSMFILEPARSER_LIB) | $(BIN_DIR)
 	$(LD) $(LDFLAGS) -o $@ $^ $(OSMFILEPARSER_LIB) $(LD_LIBS)
 
-$(OBJ_DIR) :
-	mkdir -p $(OBJ_DIR)
-
 astyle : $(SOURCE_FILES)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)  
 
