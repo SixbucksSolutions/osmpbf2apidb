@@ -29,7 +29,7 @@ all :
 astyle : $(SRCS) $(HPPS)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SRCS) $(HPPS)
 
-$(LIB) : $(OBJS) | $(LIB_DIR)
+$(LIB) : $(OBJS) | $(LIBDIR)
 	$(AR) $(ARFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
@@ -41,7 +41,7 @@ $(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(DEPDIR)/%.d | $(OBJDIR)
 $(OBJDIR) :
 	mkdir -p $(OBJDIR)
 
-$(LIB_DIR) :
+$(LIBDIR) :
 	mkdir -p $(LIB_DIR)
 
 clean :
