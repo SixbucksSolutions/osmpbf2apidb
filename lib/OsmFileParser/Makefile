@@ -29,13 +29,20 @@ all :
 astyle : $(SRCS) $(HPPS)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SRCS) $(HPPS)
 
-$(LIB) : $(OBJS)
+$(LIB) : $(OBJS) | $(LIB_DIR)
 	$(AR) $(ARFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
-$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(DEPDIR)/%.d
+$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(DEPDIR)/%.d | $(OBJDIR)
 	$(COMPILE.cpp) $< -o $@
 	$(POSTCOMPILE)
+
+
+$(OBJDIR) :
+	mkdir -p $(OBJDIR)
+
+$(LIB_DIR) :
+	mkdir -p $(LIB_DIR)
 
 clean :
 	rm -f $(OBJS) lib/libosmfileparser.a
