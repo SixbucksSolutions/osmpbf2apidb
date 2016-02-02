@@ -26,7 +26,7 @@ int main(
     {
         ::OsmFileParser::PbfReader pbfReader;
         ::OsmDataWriter::PostgresqlApiDb::NoTableConstraints sqlFileWriter;
-        pbfReader.parse(pbfFilename, &sqlFileWriter);
+        pbfReader.parse(pbfFilename, &sqlFileWriter, numberWorkerThreads);
 
         // We know once we're done with parse, all worker threads have safely terminated so no chance of
         //  race condition on following data

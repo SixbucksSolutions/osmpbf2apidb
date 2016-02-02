@@ -63,8 +63,10 @@ namespace OsmFileParser
             bool                                        m_visitWays;
             bool                                        m_visitRelations;
             bool                                        m_visitChangesets;
-			::std::mutex									m_workerThreadIdMutex;
+			::std::mutex								m_workerThreadMutex;
 			unsigned int								m_workerThreadsLaunched;
+			::std::uint64_t								m_datablockBytesProcessed;
+			::std::uint64_t								m_datablockBytesTotal;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename

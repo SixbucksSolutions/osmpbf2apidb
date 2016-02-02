@@ -39,8 +39,10 @@ namespace OsmFileParser
         m_visitWays(false),
         m_visitRelations(false),
         m_visitChangesets(false),
-        m_workerThreadIdMutex(),
-        m_workerThreadsLaunched(0)
+        m_workerThreadMutex(),
+        m_workerThreadsLaunched(0),
+        m_datablockBytesProcessed(0),
+        m_datablockBytesTotal(0)
     {
         ;
     }
@@ -66,13 +68,16 @@ namespace OsmFileParser
         std::vector<DatablockWorklist> worklists =
             _generateDatablockWorklists(numberOfWorkerThreads);
 
+        std::cout << boost::lexical_cast<std::string>(m_datablockBytesTotal) <<
+                  " bytes of compressed data to process" << std::endl;
+
         std::vector<std::thread> workerThreads(numberOfWorkerThreads);
 
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
         {
-            workerThreads.at(i) = 
+            workerThreads.at(i) =
                 std::thread( ::std::bind(&OsmFileParser::PbfReader::_processWorklist, this,
-					std::ref(worklists.at(i))) );
+                                         std::ref(worklists.at(i))) );
         }
 
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
@@ -128,6 +133,8 @@ namespace OsmFileParser
         uint32_t*   pBlobHeaderLength =
             reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
         std::vector<DatablockWorklist> pWorklists(numWorklists);
+
+        std::cout << "Indexing of datablocks started" << std::endl;
 
         // Find out how many bytes in the blob header
         //std::cout << "BlobHeader length: " << ntohl(*pBlobHeaderLength) << std::endl;
@@ -207,6 +214,9 @@ namespace OsmFileParser
                 _calculateFileOffset(pCurrentBufferCursor + ntohl(*pBlobHeaderLength) + blobHeader.datasize() - 1),
                 blobHeader.datasize()
             };
+
+            // Update total datablock bytes that must be processed
+            m_datablockBytesTotal += newDatablock.sizeInBytes;
 
             pWorklists.at(currWorklist).addDatablock(newDatablock);
 
@@ -699,7 +709,7 @@ namespace OsmFileParser
             unsigned int workerId = 0;
             // Dedicated scope to limit critical region
             {
-                ::std::lock_guard<::std::mutex> lock( m_workerThreadIdMutex);
+                ::std::lock_guard<::std::mutex> lock( m_workerThreadMutex);
                 workerId = ++m_workerThreadsLaunched;
             }
 

@@ -5,7 +5,8 @@ LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf
 CPP_FILES := $(wildcard src/*.cpp) 
 HPP_FILES := $(wildcard src/*.hpp)
 SOURCE_FILES := $(HPP_FILES) $(CPP_FILES)
-OBJ_FILES := $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
+OBJ_DIR := obj
+OBJ_FILES := $(addprefix $(OBJ_DIR)/,$(notdir $(CPP_FILES:.cpp=.o)))
 OSMFILEPARSER_LIB := lib/OsmFileParser/lib/libosmfileparser.a
 ASTYLE=astyle
 ASTYLE_FLAGS=--options=astyle.cfg 
@@ -27,11 +28,16 @@ all :
 bin/osmpbf2apidb : $(OBJ_FILES) $(OSMFILEPARSER_LIB)
 	$(LD) $(LDFLAGS) -o $@ $^ $(OSMFILEPARSER_LIB) $(LD_LIBS)
 
+$(OBJ_FILES) : | $(OBJ_DIR)
+
+$(OBJ_DIR) :
+	mkdir -p $(OBJ_DIR)
+
 astyle : $(SOURCE_FILES)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)
 
-obj/%.o : src/%.cpp
-obj/%.o : src/%.cpp $(DEPDIR)/%.d
+$(OBJDIR)/%.o : src/%.cpp
+$(OBJDIR)/%.o : src/%.cpp $(DEPDIR)/%.d
 	$(COMPILE.cpp) $< -o $@
 	$(POSTCOMPILE)
 

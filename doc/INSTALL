@@ -1,13 +1,21 @@
+
 Install OSM-Binary dependencies
-	sudo apt-get install -y libprotobuf-dev protobuf-compiler zlib1g-dev libboost-dev ccache astyle \
-		libutfcpp-dev
+	sudo apt-get install -y git libprotobuf-dev protobuf-compiler zlib1g-dev libboost-dev ccache astyle \
+		libutfcpp-dev build-essential
 
-	
-Download OSM-Binary (libosmpbf)
+	Note "make" is part of build-essential
 
-	sudo apt-get install -y git
+Compile/install libosmpbf
+
 	git clone https://github.com/scrosby/OSM-binary
 	cd OSM-Binary
 	git checkout v1.3.3
 	make -C src 
 	sudo make -C src install
+
+Get Git Repo for project
+
+	cd ..
+    git clone ...
+	cd osmpbf2apidb
+
