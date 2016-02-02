@@ -148,10 +148,12 @@ namespace OsmFileParser
             throw ( "File did not start with an OSMHeader section" );
         }
 
+        /*
         std::cout << std::endl << "OSM File Header (" << ntohl(
                       *pBlobHeaderLength) << " bytes)" << std::endl;
         std::cout << "\tHas index data: " << blobHeader.has_indexdata() << std::endl;
         std::cout << "\tData size: " << blobHeader.datasize() << std::endl;
+        */
 
         // fast forward past header
         pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
@@ -161,9 +163,11 @@ namespace OsmFileParser
         // Iterate over datablocks
         while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
         {
+            /*
             std::cout << std::endl << std::endl <<
                       "Trying to read datablock starting at offset 0x" << std::hex <<
                       _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+            */
 
             pBlobHeaderLength = reinterpret_cast<uint32_t*>(pCurrentBufferCursor);
 
@@ -173,8 +177,10 @@ namespace OsmFileParser
             // Read blobheader
             OSMPBF::BlobHeader blobHeader;
 
+            /*
             std::cout << "Trying to read datablock header from offset 0x" << std::hex <<
                       _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+            */
 
             if ( blobHeader.ParseFromArray(pCurrentBufferCursor,
                                            ntohl(*pBlobHeaderLength)) == false )
@@ -187,10 +193,12 @@ namespace OsmFileParser
                 throw ( "Unknown datablock type \"" + blobHeader.type() + "\"" );
             }
 
+            /*
             std::cout << std::endl << "OSMData section\n\tOffset: 0x" << std::hex <<
                       _calculateFileOffset(pCurrentBufferCursor) << std::endl << "\tHeader: "
                       << std::dec << ntohl(*pBlobHeaderLength) << " bytes" << std::endl <<
                       "\tPayload: " << blobHeader.datasize() << " bytes" << std::endl;
+            */
 
             const DatablockWorklist::CompressedDatablock newDatablock =
             {
@@ -201,11 +209,13 @@ namespace OsmFileParser
 
             pWorklists.at(currWorklist).addDatablock(newDatablock);
 
+            /*
             std::cout << "\tAdded datablock from offset 0x" << std::hex <<
                       newDatablock.offsetStart << " to 0x" <<
                       newDatablock.offsetEnd << " (" <<
                       std::dec << newDatablock.sizeInBytes << " bytes) to worklist " <<
                       boost::lexical_cast<std::string>(currWorklist) << std::endl;
+            */
 
             // Update current worklist, wrapping back to zero if we've hit the last one
             currWorklist = (currWorklist + 1) % numWorklists;
@@ -213,8 +223,10 @@ namespace OsmFileParser
             pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
         }
 
+        /*
         std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
                   << std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
+        */
 
         return pWorklists;
     }
@@ -232,15 +244,17 @@ namespace OsmFileParser
             throw ( "Could not read data payload" );
         }
 
-        std::cout << "\tRead payload successfully!" << std::endl;
+        //std::cout << "\tRead payload successfully!" << std::endl;
 
         const std::size_t inflatedSize = currDataPayload.raw_size();
 
+        /*
         std::cout << "\tCompressed payload: " <<
                   boost::lexical_cast<std::string>(compressedData.sizeInBytes) <<
                   ", inflated data size: " <<
                   boost::lexical_cast<std::string>(inflatedSize) <<
                   std::endl;
+        */
 
         unsigned char* pDecompressedPayload = new unsigned char[inflatedSize];
 
@@ -262,7 +276,7 @@ namespace OsmFileParser
         delete [] pDecompressedPayload;
         pDecompressedPayload = nullptr;
 
-        std::cout << "\tSuccessfully decoded primitive block" << std::endl;
+        //std::cout << "\tSuccessfully decoded primitive block" << std::endl;
 
         _processOsmPrimitiveBlock(primitiveBlock);
     }
@@ -334,9 +348,11 @@ namespace OsmFileParser
          * can never contain any mixture of those."
          */
 
+        /*
         std::cout << "\tPrimitive block contains " <<
                   boost::lexical_cast<std::string>(primitiveBlock.primitivegroup().size()) <<
                   " primitive groups" << std::endl;
+        */
 
         // Iterate over all the primitivegroups in the block
         for ( int primitiveGroupIndex = 0;
@@ -348,9 +364,11 @@ namespace OsmFileParser
 
             if ( primitiveGroup.nodes_size() > 0 )
             {
+                /*
                 std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains (regular) node entries" << std::endl;
+                */
 
                 if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
                 {
@@ -358,15 +376,19 @@ namespace OsmFileParser
                 }
                 else
                 {
+                    /*
                     std::cout << "\t\t\tSkipping as visitor doesn't care about nodes" <<
                               std::endl;
+                    */
                 }
             }
             else if ( primitiveGroup.has_dense() == true )
             {
+                /*
                 std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains dense node entries" << std::endl;
+                */
 
                 if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
                 {
@@ -374,15 +396,19 @@ namespace OsmFileParser
                 }
                 else
                 {
+                    /*
                     std::cout << "\t\t\tSkipping as visitor doesn't care about nodes" <<
-                              std::endl;
+                        std::endl;
+                    */
                 }
             }
             else if ( primitiveGroup.ways_size() > 0 )
             {
+                /*
                 std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains way entries" << std::endl;
+                */
 
                 if ( m_pPrimitiveVisitor->shouldVisitWays() == true )
                 {
@@ -390,15 +416,17 @@ namespace OsmFileParser
                 }
                 else
                 {
-                    std::cout << "\t\t\tSkipping as visitor doesn't care about ways" << std::endl;
+                    //std::cout << "\t\t\tSkipping as visitor doesn't care about ways" << std::endl;
                 }
 
             }
             else if ( primitiveGroup.relations_size() > 0 )
             {
+                /*
                 std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains relation entries" << std::endl;
+                */
 
                 if ( m_pPrimitiveVisitor->shouldVisitRelations() == true )
                 {
@@ -406,16 +434,20 @@ namespace OsmFileParser
                 }
                 else
                 {
+                    /*
                     std::cout << "\t\t\tSkipping as visitor doesn't care about relations" <<
                               std::endl;
+                    */
                 }
             }
             else if ( primitiveGroup.changesets_size() > 0 )
             {
+                /*
                 std::cout << "\t\tPrimitive group " <<
                           boost::lexical_cast<std::string>(primitiveGroupIndex + 1) <<
                           " contains changeset entries" <<
                           std::endl;
+                */
 
                 if ( m_pPrimitiveVisitor->shouldVisitChangesets() == true )
                 {
@@ -423,8 +455,10 @@ namespace OsmFileParser
                 }
                 else
                 {
+                    /*
                     std::cout << "\t\t\tSkipping as visitor doesn't care about changesets" <<
                               std::endl;
+                    */
                 }
             }
             else
@@ -445,8 +479,10 @@ namespace OsmFileParser
         // Can reserve exact space needed for vector up front
         const unsigned int numStrings = pbfStringTable.s_size();
 
+        /*
         std::cout << "\tNumber string table entries: " <<
                   boost::lexical_cast<std::string>(numStrings) << std::endl;
+        */
 
         // *** IMPORTANT NOTE ***
         //      PBF Strings are in UTF-8, we convert to UTF-16 internally,
@@ -648,8 +684,10 @@ namespace OsmFileParser
             }
         }
 
+        /*
         std::cout << "\t\t\tAll " << std::dec << listSize <<
                   " nodes in primitive group visited" << std::endl;
+        */
     }
 
     void PbfReader::_processWorklist(
@@ -669,10 +707,12 @@ namespace OsmFileParser
                 DatablockWorklist::CompressedDatablock currBlock =
                     worklist.getNextDatablock();
 
+                /*
                 std::cout << "\nWorker thread " <<
                           boost::lexical_cast<std::string>(workerId) <<
                           " working datablock starting at offset 0x" << std::hex <<
                           currBlock.offsetStart << std::endl;
+                */
 
                 // Parse entities out of compressed block
                 _parseCompressedDatablock( currBlock );
@@ -766,8 +806,10 @@ namespace OsmFileParser
             m_pPrimitiveVisitor->visit(newWay);
         }
 
+        /*
         std::cout << "\t\t\tAll " << numberOfWays <<
                   " ways in primitive group visited" << std::endl;
+        */
     }
 
     bool PbfReader::_processPrimitiveInfo(
@@ -941,8 +983,10 @@ namespace OsmFileParser
             */
         }
 
+        /*
         std::cout << "\t\t\tAll " << numberOfRelations <<
                   " relations in primitive group visited" << std::endl;
+        */
     }
 
     bool PbfReader::_parseRelationMembers(

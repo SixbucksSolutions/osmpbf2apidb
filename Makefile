@@ -24,8 +24,8 @@ all :
 	make astyle
 	make bin/osmpbf2apidb
 
-bin/osmpbf2apidb : $(OBJ_FILES) 
-	$(LD) $(LDFLAGS) -o $@ $^ lib/OsmFileParser/lib/libosmfileparser.a $(LD_LIBS)
+bin/osmpbf2apidb : $(OBJ_FILES) $(OSMFILEPARSER_LIB)
+	$(LD) $(LDFLAGS) -o $@ $^ $(OSMFILEPARSER_LIB) $(LD_LIBS)
 
 astyle : $(SOURCE_FILES)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)
