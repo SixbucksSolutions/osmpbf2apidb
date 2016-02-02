@@ -42,7 +42,7 @@ $(OBJDIR) :
 	mkdir -p $(OBJDIR)
 
 $(LIBDIR) :
-	mkdir -p $(LIB_DIR)
+	mkdir -p $(LIBDIR)
 
 clean :
 	rm -f $(OBJS) lib/libosmfileparser.a
