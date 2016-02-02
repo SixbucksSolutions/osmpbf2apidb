@@ -7,6 +7,7 @@ HPP_FILES := $(wildcard src/*.hpp)
 SOURCE_FILES := $(HPP_FILES) $(CPP_FILES)
 OBJ_DIR := obj
 OBJ_FILES := $(addprefix $(OBJ_DIR)/,$(notdir $(CPP_FILES:.cpp=.o)))
+BIN_DIR := bin
 OSMFILEPARSER_LIB := lib/OsmFileParser/lib/libosmfileparser.a
 ASTYLE=astyle
 ASTYLE_FLAGS=--options=astyle.cfg 
@@ -23,27 +24,32 @@ POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 all : 
 	cd lib/OsmFileParser; make
 	make astyle
-	make bin/osmpbf2apidb
+	make $(BIN_DIR)/osmpbf2apidb
 
-bin/osmpbf2apidb : $(OBJ_FILES) $(OSMFILEPARSER_LIB)
+$(BIN_DIR)/osmpbf2apidb : $(OBJ_FILES) $(OSMFILEPARSER_LIB) | $(BIN_DIR)
 	$(LD) $(LDFLAGS) -o $@ $^ $(OSMFILEPARSER_LIB) $(LD_LIBS)
-
-$(OBJ_FILES) : | $(OBJ_DIR)
 
 $(OBJ_DIR) :
 	mkdir -p $(OBJ_DIR)
 
 astyle : $(SOURCE_FILES)
-	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)
+	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)  
 
-$(OBJDIR)/%.o : src/%.cpp
-$(OBJDIR)/%.o : src/%.cpp $(DEPDIR)/%.d
+$(OBJ_DIR)/%.o : src/%.cpp
+$(OBJ_DIR)/%.o : src/%.cpp $(DEPDIR)/%.d | $(OBJ_DIR)
 	$(COMPILE.cpp) $< -o $@
 	$(POSTCOMPILE)
 
+$(OBJ_DIR) :
+	mkdir -p $(OBJ_DIR)
+
+$(BIN_DIR) :
+	mkdir -p $(BIN_DIR)
+
+
 clean : 
 	cd lib/OsmFileParser; make clean
-	$(RM) $(RM_FLAGS) $(OBJ_FILES) bin/osmpbf2apidb
+	$(RM) $(RM_FLAGS) $(OBJ_FILES) $(BIN_DIR)/osmpbf2apidb
 
 # What this magic is doing
 #
