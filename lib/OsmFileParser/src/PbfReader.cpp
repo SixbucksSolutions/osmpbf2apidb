@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <iterator>
 #include <thread>
+#include <mutex>
 #include <netinet/in.h>
 #include <boost/shared_array.hpp>
 #include <boost/lexical_cast.hpp>
@@ -37,7 +38,9 @@ namespace OsmFileParser
         m_visitNodes(false),
         m_visitWays(false),
         m_visitRelations(false),
-        m_visitChangesets(false)
+        m_visitChangesets(false),
+        m_workerThreadIdMutex(),
+        m_workerThreadsLaunched(0)
     {
         ;
     }
@@ -67,16 +70,14 @@ namespace OsmFileParser
 
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
         {
-            /*
-            workerThreads[i] = std::thread(
-                _processWorklist, i, std::ref(worklists[i]));
-            */
-            _processWorklist(i, worklists.at(i));
+            workerThreads.at(i) = 
+                std::thread( ::std::bind(&OsmFileParser::PbfReader::_processWorklist, this,
+					std::ref(worklists.at(i))) );
         }
 
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
         {
-            //workerThreads[i].join();
+            workerThreads.at(i).join();
         }
     }
 
@@ -691,11 +692,17 @@ namespace OsmFileParser
     }
 
     void PbfReader::_processWorklist(
-        const unsigned int  workerId,
         DatablockWorklist&  worklist )
     {
         try
         {
+            unsigned int workerId = 0;
+            // Dedicated scope to limit critical region
+            {
+                ::std::lock_guard<::std::mutex> lock( m_workerThreadIdMutex);
+                workerId = ++m_workerThreadsLaunched;
+            }
+
             std::cout << "\nWorker thread " <<
                       boost::lexical_cast<std::string>(workerId) << " started!" <<
                       std::endl;
@@ -1045,4 +1052,5 @@ namespace OsmFileParser
 
         return true;
     }
+
 }

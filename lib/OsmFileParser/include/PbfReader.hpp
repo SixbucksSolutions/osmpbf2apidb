@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include <vector>
+#include <mutex>
 #include <osmpbf/osmpbf.h>
 #include "Utf16String.hpp"
 #include "Node.hpp"
@@ -62,6 +63,8 @@ namespace OsmFileParser
             bool                                        m_visitWays;
             bool                                        m_visitRelations;
             bool                                        m_visitChangesets;
+			::std::mutex									m_workerThreadIdMutex;
+			unsigned int								m_workerThreadsLaunched;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename
@@ -111,9 +114,10 @@ namespace OsmFileParser
             );
 
             void _processWorklist(
-                const unsigned int  workerId,
                 DatablockWorklist&  worklist
             );
+
+			void _fakeFunction() {  }
 
             void _processWays(
                 const OSMPBF::PrimitiveGroup&                       primitiveGroup,
