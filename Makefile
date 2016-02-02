@@ -14,12 +14,11 @@ ASTYLE_FLAGS=--options=astyle.cfg
 RM=rm
 RM_FLAGS=-f
 
-DEPDIR := dep
-$(shell mkdir -p $(DEPDIR) >/dev/null)
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+DEP_DIR := dep
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEP_DIR)/$*.Td
 
 COMPILE.cpp = $(CC) $(DEPFLAGS) $(CPPFLAGS) -c
-POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
+POSTCOMPILE = mv -f $(DEP_DIR)/$*.Td $(DEP_DIR)/$*.d
 
 all : 
 	cd lib/OsmFileParser; make
@@ -33,7 +32,7 @@ astyle : $(SOURCE_FILES)
 	$(ASTYLE) $(ASTYLE_FLAGS) $(SOURCE_FILES)  
 
 $(OBJ_DIR)/%.o : src/%.cpp
-$(OBJ_DIR)/%.o : src/%.cpp $(DEPDIR)/%.d | $(OBJ_DIR)
+$(OBJ_DIR)/%.o : src/%.cpp $(DEP_DIR)/%.d | $(OBJ_DIR) $(DEP_DIR)
 	$(COMPILE.cpp) $< -o $@
 	$(POSTCOMPILE)
 
@@ -42,6 +41,9 @@ $(OBJ_DIR) :
 
 $(BIN_DIR) :
 	mkdir -p $(BIN_DIR)
+
+$(DEP_DIR) :
+	mkdir -p $(DEP_DIR)
 
 
 clean : 
@@ -72,4 +74,4 @@ clean :
 #			Before : "foo.d		  bar.d"
 #			After  : "dep/foo.d   dep/bar.d"
 # 
--include $(addprefix $(DEPDIR)/,$(notdir $(CPP_FILES:.cpp=.d)))
+-include $(addprefix $(DEP_DIR)/,$(notdir $(CPP_FILES:.cpp=.d)))

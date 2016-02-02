@@ -16,7 +16,6 @@ ASTYLE := astyle
 ASTYLE_FLAGS := --options=../../astyle.cfg
 
 DEPDIR := dep
-$(shell mkdir -p $(DEPDIR) >/dev/null)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
 COMPILE.cpp = $(CXX) $(DEPFLAGS) $(CXXFLAGS) -c
@@ -33,7 +32,7 @@ $(LIB) : $(OBJS) | $(LIBDIR)
 	$(AR) $(ARFLAGS) -o $@ $^
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
-$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(DEPDIR)/%.d | $(OBJDIR)
+$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(DEPDIR)/%.d | $(OBJDIR) $(DEPDIR)
 	$(COMPILE.cpp) $< -o $@
 	$(POSTCOMPILE)
 
@@ -43,6 +42,9 @@ $(OBJDIR) :
 
 $(LIBDIR) :
 	mkdir -p $(LIBDIR)
+
+$(DEPDIR) :
+	mkdir -p $(DEPDIR)
 
 clean :
 	rm -f $(OBJS) lib/libosmfileparser.a
