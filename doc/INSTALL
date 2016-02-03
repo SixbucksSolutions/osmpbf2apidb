@@ -18,4 +18,4 @@ Get Git Repo for project
 	cd ..
     git clone ...
 	cd osmpbf2apidb
-
+	make
