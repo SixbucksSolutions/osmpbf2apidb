@@ -245,7 +245,8 @@ namespace OsmFileParser
 
 
     void PbfReader::_parseCompressedDatablock(
-        const DatablockWorklist::CompressedDatablock&   compressedData )
+        const DatablockWorklist::CompressedDatablock&   compressedData,
+        const ::boost::posix_time::ptime&               datablockProcessingStartTime )
     {
         OSMPBF::Blob currDataPayload;
 
@@ -290,7 +291,8 @@ namespace OsmFileParser
 
         //std::cout << "\tSuccessfully decoded primitive block" << std::endl;
 
-        _processOsmPrimitiveBlock(primitiveBlock);
+        _processOsmPrimitiveBlock(primitiveBlock, compressedData.sizeInBytes,
+                                  datablockProcessingStartTime);
     }
 
     PbfReader::~PbfReader()
@@ -337,7 +339,9 @@ namespace OsmFileParser
     }
 
     void PbfReader::_processOsmPrimitiveBlock(
-        const OSMPBF::PrimitiveBlock&   primitiveBlock )
+        const OSMPBF::PrimitiveBlock&       primitiveBlock,
+        const ::std::uint64_t               compressedSize,
+        const ::boost::posix_time::ptime&   datablockProcessingStartTime )
     {
         // NOTE: strings are stored in PBF in UTF8, we store in UTF16 internally,
         //      serializing out to UTF8 again on the way out
@@ -404,7 +408,8 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitNodes() == true )
                 {
-                    _processDenseNodes( primitiveGroup.dense(), stringTable );
+                    _processDenseNodes( primitiveGroup.dense(), stringTable,
+                                        compressedSize, datablockProcessingStartTime );
                 }
                 else
                 {
@@ -424,7 +429,8 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitWays() == true )
                 {
-                    _processWays( primitiveGroup, stringTable );
+                    _processWays( primitiveGroup, stringTable,
+                                  compressedSize, datablockProcessingStartTime );
                 }
                 else
                 {
@@ -442,7 +448,8 @@ namespace OsmFileParser
 
                 if ( m_pPrimitiveVisitor->shouldVisitRelations() == true )
                 {
-                    _processRelations( primitiveGroup, stringTable );
+                    _processRelations( primitiveGroup, stringTable,
+                                       compressedSize, datablockProcessingStartTime );
                 }
                 else
                 {
@@ -524,7 +531,10 @@ namespace OsmFileParser
 
     void PbfReader::_processDenseNodes(
         const OSMPBF::DenseNodes&                           denseNodes,
-        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable  )
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+        const ::std::uint64_t                               compressedDatablockSize,
+        const ::boost::posix_time::ptime&
+        datablockProcessingStartTime )
     {
         // Make sure we have dense info as we need info from it (changeset, timestamp, etc.)
         if ( denseNodes.has_denseinfo() == false )
@@ -696,6 +706,20 @@ namespace OsmFileParser
             }
         }
 
+        // Mark duration of time we spent processing datablock
+        const ::boost::posix_time::time_duration
+        datablockProcessingTime(
+            ::boost::posix_time::microsec_clock::universal_time() -
+            datablockProcessingStartTime );
+
+        // Update stats
+        m_pbfStatsManager.datablockProcessingCompleted(
+            compressedDatablockSize,
+            datablockProcessingTime,
+            ::OsmFileParser::PbfStatsManager::EntityType::NODE,
+            listSize );
+
+
         /*
         std::cout << "\t\t\tAll " << std::dec << listSize <<
                   " nodes in primitive group visited" << std::endl;
@@ -718,6 +742,8 @@ namespace OsmFileParser
                       boost::lexical_cast<std::string>(workerId) << " started!" <<
                       std::endl;
 
+            ::boost::posix_time::ptime  datablockProcessingStartTime;
+
             while ( worklist.empty() == false )
             {
 
@@ -732,8 +758,13 @@ namespace OsmFileParser
                           currBlock.offsetStart << std::endl;
                 */
 
+                // Mark the start time for processing the datablock
+                datablockProcessingStartTime =
+                    ::boost::posix_time::microsec_clock::universal_time();
+
                 // Parse entities out of compressed block
-                _parseCompressedDatablock( currBlock );
+                _parseCompressedDatablock( currBlock,
+                                           datablockProcessingStartTime );
             }
 
 
@@ -757,7 +788,10 @@ namespace OsmFileParser
 
     void PbfReader::_processWays(
         const OSMPBF::PrimitiveGroup&                       primitiveGroup,
-        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+        const ::std::uint64_t                               compressedSize,
+        const ::boost::posix_time::ptime&
+        datablockProcessingStartTime )
     {
         const int numberOfWays = primitiveGroup.ways_size();
 
@@ -824,6 +858,17 @@ namespace OsmFileParser
             m_pPrimitiveVisitor->visit(newWay);
         }
 
+        // Compute end time of processing datablock
+        const ::boost::posix_time::time_duration processingDuration(
+            ::boost::posix_time::microsec_clock::universal_time() -
+            datablockProcessingStartTime );
+
+        // Update stats
+        m_pbfStatsManager.datablockProcessingCompleted(
+            compressedSize,
+            processingDuration,
+            ::OsmFileParser::PbfStatsManager::EntityType::WAY,
+            numberOfWays );
         /*
         std::cout << "\t\t\tAll " << numberOfWays <<
                   " ways in primitive group visited" << std::endl;
@@ -934,7 +979,10 @@ namespace OsmFileParser
 
     void PbfReader::_processRelations(
         const OSMPBF::PrimitiveGroup&                       primitiveGroup,
-        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable )
+        const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+        const ::std::uint64_t                               compressedSize,
+        const ::boost::posix_time::ptime&
+        datablockProcessingStartTime )
     {
         const int numberOfRelations = primitiveGroup.relations_size();
 
@@ -1017,6 +1065,17 @@ namespace OsmFileParser
             break;
             */
         }
+
+        // Calculate total processing time for datablock
+        const ::boost::posix_time::time_duration
+        processingTime(
+            ::boost::posix_time::microsec_clock::universal_time() -
+            datablockProcessingStartTime );
+
+        m_pbfStatsManager.datablockProcessingCompleted(
+            compressedSize, processingTime,
+            ::OsmFileParser::PbfStatsManager::EntityType::RELATION,
+            numberOfRelations );
 
         /*
         std::cout << "\t\t\tAll " << numberOfRelations <<

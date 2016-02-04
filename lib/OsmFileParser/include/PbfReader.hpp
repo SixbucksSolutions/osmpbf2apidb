@@ -95,7 +95,9 @@ namespace OsmFileParser
              * @param [in]  compressedData  Information about block to process
              */
             void _parseCompressedDatablock(
-                const DatablockWorklist::CompressedDatablock&   compressedData );
+                const DatablockWorklist::CompressedDatablock&   compressedData,
+                const ::boost::posix_time::ptime&
+                datablockProcessingStartTime );
 
             void            _inflateCompressedPayload(
                 const OSMPBF::Blob& currDataPayload,
@@ -103,7 +105,9 @@ namespace OsmFileParser
             );
 
             void            _processOsmPrimitiveBlock(
-                const OSMPBF::PrimitiveBlock&   primitiveBlock
+                const OSMPBF::PrimitiveBlock&       primitiveBlock,
+                const ::std::uint64_t               compressedSize,
+                const ::boost::posix_time::ptime&   datablockProcessingStartTime
             );
 
             ::std::vector<::OsmFileParser::Utf16String> _generateStringTable(
@@ -112,18 +116,22 @@ namespace OsmFileParser
 
             void _processDenseNodes(
                 const OSMPBF::DenseNodes&                           denseNodes,
-                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+                const ::std::uint64_t                               compressedDatablockSize,
+                const ::boost::posix_time::ptime&
+                datablockStartProcessingTime
             );
 
             void _processWorklist(
                 DatablockWorklist&  worklist
             );
 
-            void _fakeFunction() {  }
-
             void _processWays(
                 const OSMPBF::PrimitiveGroup&                       primitiveGroup,
-                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+                const ::std::uint64_t                               compressedDatablockSize,
+                const ::boost::posix_time::ptime&
+                datablockProcessingStartTime
             );
 
             bool _processPrimitiveInfo(
@@ -155,7 +163,10 @@ namespace OsmFileParser
 
             void _processRelations(
                 const OSMPBF::PrimitiveGroup&                       primitiveGroup,
-                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable
+                const ::std::vector<::OsmFileParser::Utf16String>&  stringTable,
+                const ::std::uint64_t                               compressedSize,
+                const ::boost::posix_time::ptime&
+                datablockProcessingStartTime
             );
 
             bool _parseRelationMembers(
