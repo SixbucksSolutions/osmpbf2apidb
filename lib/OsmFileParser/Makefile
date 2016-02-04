@@ -1,5 +1,5 @@
 CXX = ccache g++
-CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O2 -Iinclude/
+CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O2 -Iinclude -Isrc
 
 SRCDIR := src
 INCLUDEDIR := include

@@ -10,6 +10,7 @@
 #include "Node.hpp"
 #include "../src/DatablockWorklist.hpp"
 #include "PrimitiveVisitor.hpp"
+#include "PbfStatsManager.hpp"
 
 namespace OsmFileParser
 {
@@ -65,8 +66,7 @@ namespace OsmFileParser
             bool                                        m_visitChangesets;
             ::std::mutex                                m_workerThreadMutex;
             unsigned int                                m_workerThreadsLaunched;
-            ::std::uint64_t                             m_datablockBytesProcessed;
-            ::std::uint64_t                             m_datablockBytesTotal;
+            ::OsmFileParser::PbfStatsManager            m_pbfStatsManager;
 
             void _memoryMapPbfFile(
                 const ::std::string&    pbfFilename

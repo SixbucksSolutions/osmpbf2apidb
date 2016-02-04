@@ -41,8 +41,7 @@ namespace OsmFileParser
         m_visitChangesets(false),
         m_workerThreadMutex(),
         m_workerThreadsLaunched(0),
-        m_datablockBytesProcessed(0),
-        m_datablockBytesTotal(0)
+        m_pbfStatsManager()
     {
         ;
     }
@@ -68,7 +67,8 @@ namespace OsmFileParser
         std::vector<DatablockWorklist> worklists =
             _generateDatablockWorklists(numberOfWorkerThreads);
 
-        std::cout << boost::lexical_cast<std::string>(m_datablockBytesTotal) <<
+        std::cout << boost::lexical_cast<std::string>(
+                      m_pbfStatsManager.totalCompressedBytes()) <<
                   " bytes of compressed data to process" << std::endl;
 
         std::vector<std::thread> workerThreads(numberOfWorkerThreads);
@@ -168,6 +168,8 @@ namespace OsmFileParser
 
         unsigned int currWorklist = 0;
 
+        ::std::uint64_t totalCompressedBytes = 0;
+
         // Iterate over datablocks
         while ( pCurrentBufferCursor < m_pMemoryMappedBuffer + getFileSizeInBytes() )
         {
@@ -216,7 +218,7 @@ namespace OsmFileParser
             };
 
             // Update total datablock bytes that must be processed
-            m_datablockBytesTotal += newDatablock.sizeInBytes;
+            totalCompressedBytes += newDatablock.sizeInBytes;
 
             pWorklists.at(currWorklist).addDatablock(newDatablock);
 
@@ -234,10 +236,9 @@ namespace OsmFileParser
             pCurrentBufferCursor += ntohl(*pBlobHeaderLength) + blobHeader.datasize();
         }
 
-        /*
-        std::cout << std::endl << std::endl << "Stopped reading at offset 0x"
-                  << std::hex << _calculateFileOffset(pCurrentBufferCursor) << std::endl;
-        */
+        // Inform stats manager of total compressed bytes found so we can track
+        //      progress towards completion
+        m_pbfStatsManager.totalCompressedBytes(totalCompressedBytes);
 
         return pWorklists;
     }

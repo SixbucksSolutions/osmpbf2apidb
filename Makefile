@@ -1,5 +1,5 @@
 CXX = ccache g++
-CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O2 -Ilib
+CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O2 -Ilib -Ilib/OsmFileParser/src
 
 SRCDIR := src
 SRCS := $(wildcard $(SRCDIR)/*.cpp)
