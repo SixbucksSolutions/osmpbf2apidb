@@ -37,7 +37,7 @@ namespace OsmDataWriter
 
                 virtual bool shouldVisitChangesets() const
                 {
-                    return false;
+                    return true;
                 }
 
                 virtual void visit(

@@ -842,18 +842,35 @@ namespace OsmFileParser
         if (
             (infoBlock.has_version() == false ) ||
             (infoBlock.has_timestamp() == false) ||
-            (infoBlock.has_changeset() == false) ||
-            (infoBlock.has_uid() == false) ||
-            (infoBlock.has_user_sid() == false) )
+            (infoBlock.has_changeset() == false) )
         {
+            std::cerr << "Primitive info block missing data:" << std::endl <<
+                      "\tVersion   : " << infoBlock.has_version() << std::endl <<
+                      "\tTimestamp : " << infoBlock.has_timestamp() << std::endl <<
+                      "\tChangeset : " << infoBlock.has_changeset() << std::endl;
+
             return false;
         }
 
         version         = infoBlock.version();
         timestamp       = infoBlock.timestamp();
         changesetId     = infoBlock.changeset();
-        userId          = infoBlock.uid();
-        username        = stringTable.at(infoBlock.user_sid());
+
+        // UID/userID are missing in several ways, so we have to not have it
+        //      be fatal
+        if ( infoBlock.has_uid() == true )
+        {
+            userId = infoBlock.uid();
+        }
+        else
+        {
+            userId = 0;
+        }
+
+        if ( infoBlock.has_user_sid() == true )
+        {
+            username = stringTable.at(infoBlock.user_sid());
+        }
 
         return true;
     }
