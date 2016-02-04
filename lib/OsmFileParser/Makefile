@@ -2,8 +2,9 @@ CXX = ccache g++
 CXXFLAGS = -Wall -Wextra -std=c++11 -Wpedantic -O2 -Iinclude/
 
 SRCDIR := src
+INCLUDEDIR := include
 SRCS := $(wildcard $(SRCDIR)/*.cpp)
-HPPS := $(wildcard $(SRCDIR)/*.hpp)
+HPPS := $(wildcard $(INCLUDEDIR)/*.hpp) $(wildcard $(SRCDIR)/*.hpp)
 LIBDIR := lib
 LIB := $(LIBDIR)/libosmfileparser.a
 OBJDIR := obj
