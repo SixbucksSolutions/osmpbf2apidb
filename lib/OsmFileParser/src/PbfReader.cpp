@@ -73,6 +73,8 @@ namespace OsmFileParser
 
         std::vector<std::thread> workerThreads(numberOfWorkerThreads);
 
+        m_pbfStatsManager.startStatsProcessing();
+
         for ( unsigned int i = 0; i < numberOfWorkerThreads; ++i )
         {
             workerThreads.at(i) =
@@ -84,6 +86,8 @@ namespace OsmFileParser
         {
             workerThreads.at(i).join();
         }
+
+        m_pbfStatsManager.stopStatsProcessing();
     }
 
     void PbfReader::_memoryMapPbfFile(
