@@ -15,16 +15,8 @@ namespace OsmFileParser
         m_statsMutex()
     {
         m_nodeStats.entitiesVisited = 0;
-        m_nodeStats.entityProcessingTime =
-            ::boost::posix_time::seconds(0);
-
         m_wayStats.entitiesVisited = 0;
-        m_wayStats.entityProcessingTime =
-            ::boost::posix_time::seconds(0);
-
         m_relationStats.entitiesVisited = 0;
-        m_relationStats.entityProcessingTime =
-            ::boost::posix_time::seconds(0);
     }
 
     void PbfStatsManager::startStatsProcessing()
@@ -44,36 +36,52 @@ namespace OsmFileParser
         m_compressedBytesProcessed  += compressedBytesProcessed;
         m_totalProcessingTime       += processingTime;
 
-        switch ( entityType )
+        ::boost::posix_time::ptime now =
+            ::boost::posix_time::microsec_clock::universal_time();
+
+        if ( entityType == EntityType::NODE )
         {
-            case EntityType::NODE:
-                m_nodeStats.entitiesVisited             += entitiesVisited;
-                m_nodeStats.entityProcessingTime        += processingTime;
+            // Is this first notification we've seen for this type?
+            if ( m_nodeStats.entitiesVisited == 0 )
+            {
+                m_nodeStats.timeFirstProcessed = now - processingTime;
+            }
 
-                break;
+            m_nodeStats.entitiesVisited     +=  entitiesVisited;
+            m_nodeStats.timeLastProcessed   =   now;
+        }
+        else if ( entityType == EntityType::WAY )
+        {
+            // Is this first notification we've seen for this type?
+            if ( m_wayStats.entitiesVisited == 0 )
+            {
+                m_wayStats.timeFirstProcessed = now - processingTime;
+            }
 
-            case EntityType::WAY:
-                m_wayStats.entitiesVisited              += entitiesVisited;
-                m_wayStats.entityProcessingTime         += processingTime;
+            m_wayStats.entitiesVisited     +=  entitiesVisited;
+            m_wayStats.timeLastProcessed   =   now;
 
-                break;
+        }
+        else if ( entityType == EntityType::RELATION )
+        {
+            // Is this first notification we've seen for this type?
+            if ( m_relationStats.entitiesVisited == 0 )
+            {
+                m_relationStats.timeFirstProcessed = now - processingTime;
+            }
 
-            case EntityType::RELATION:
-                m_relationStats.entitiesVisited         += entitiesVisited;
-                m_relationStats.entityProcessingTime    += processingTime;
-
-                break;
-
-                /*
-                case EntityType::CHANGESET:
-
-                    break;
-                */
-
-            default:
-                throw ( "Invalid entity type passed when updating datablock stats" );
-
-                break;
+            m_relationStats.entitiesVisited     +=  entitiesVisited;
+            m_relationStats.timeLastProcessed   =   now;
+        }
+        /*
+        else if ( entityType == EntityType::CHANGESET )
+        {
+            ;
+        }
+        */
+        else
+        {
+            throw ( "Invalid entity type passed when updating datablock stats" );
         }
     }
 
@@ -87,14 +95,15 @@ namespace OsmFileParser
                   ::boost::lexical_cast<std::string>(m_nodeStats.entitiesVisited) <<
                   std::endl <<
                   "\t\tTime (s): " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_nodeStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) <<
+                  ((m_nodeStats.timeLastProcessed - m_nodeStats.timeFirstProcessed).
+                   total_microseconds() / 1000000.0) <<
                   std::endl <<
                   "\t\tProcessed/second: " <<
                   ::boost::lexical_cast<std::string>(
                       m_nodeStats.entitiesVisited /
-                      (m_nodeStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) ) <<
-                  std::endl;
+                      ((m_nodeStats.timeLastProcessed - m_nodeStats.timeFirstProcessed).
+                       total_microseconds() / 1000000.0)) <<
+                  std::endl << std::endl;
 
         std::cout <<
                   "\tWays:" << std::endl <<
@@ -102,14 +111,15 @@ namespace OsmFileParser
                   ::boost::lexical_cast<std::string>(m_wayStats.entitiesVisited) <<
                   std::endl <<
                   "\t\tTime (s): " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_wayStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) <<
+                  ((m_wayStats.timeLastProcessed - m_wayStats.timeFirstProcessed).
+                   total_microseconds() / 1000000.0) <<
                   std::endl <<
                   "\t\tProcessed/second: " <<
                   ::boost::lexical_cast<std::string>(
                       m_wayStats.entitiesVisited /
-                      (m_wayStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) ) <<
-                  std::endl;
+                      ((m_wayStats.timeLastProcessed - m_wayStats.timeFirstProcessed).
+                       total_microseconds() / 1000000.0)) <<
+                  std::endl << std::endl;
 
         std::cout <<
                   "\tRelations:" << std::endl <<
@@ -117,14 +127,46 @@ namespace OsmFileParser
                   ::boost::lexical_cast<std::string>(m_relationStats.entitiesVisited) <<
                   std::endl <<
                   "\t\tTime (s): " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_relationStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) <<
+                  ((m_relationStats.timeLastProcessed - m_relationStats.timeFirstProcessed).
+                   total_microseconds() / 1000000.0) <<
                   std::endl <<
                   "\t\tProcessed/second: " <<
                   ::boost::lexical_cast<std::string>(
                       m_relationStats.entitiesVisited /
-                      (m_relationStats.entityProcessingTime.total_nanoseconds() / 1000000000.0) ) <<
-                  std::endl;
+                      ((m_relationStats.timeLastProcessed - m_relationStats.timeFirstProcessed).
+                       total_microseconds() / 1000000.0)) <<
+                  std::endl << std::endl;
+
+        ::boost::posix_time::ptime firstProcessing =
+            ::std::min(m_nodeStats.timeFirstProcessed, m_wayStats.timeFirstProcessed);
+        firstProcessing = ::std::min(firstProcessing,
+                                     m_relationStats.timeFirstProcessed);
+
+        ::boost::posix_time::ptime lastProcessing =
+            ::std::max(m_nodeStats.timeLastProcessed, m_wayStats.timeLastProcessed);
+        lastProcessing = ::std::max(lastProcessing,
+                                    m_relationStats.timeLastProcessed);
+
+		std::uint_fast64_t totalEntities = 
+			m_nodeStats.entitiesVisited +
+			m_wayStats.entitiesVisited +
+			m_relationStats.entitiesVisited;
+
+		std::cout << 
+                  "\tEntities:" << std::endl <<
+                  "\t\tProcessed: " <<
+				  totalEntities <<
+                  std::endl <<
+                  "\t\tTime (s): " <<
+                  ((lastProcessing - firstProcessing).
+                   total_microseconds() / 1000000.0) <<
+                  std::endl <<
+                  "\t\tProcessed/second: " <<
+                  ::boost::lexical_cast<std::string>(
+                      totalEntities /
+                      ((lastProcessing - firstProcessing).
+                       total_microseconds() / 1000000.0)) <<
+                  std::endl << std::endl;
 
 
     }

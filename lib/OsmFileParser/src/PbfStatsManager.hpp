@@ -56,7 +56,9 @@ namespace OsmFileParser
             struct EntityProcessingStats
             {
                 ::std::uint_fast64_t                entitiesVisited;
-                ::boost::posix_time::time_duration  entityProcessingTime;
+                ::boost::posix_time::ptime          timeFirstProcessed;
+                ::boost::posix_time::ptime          timeLastProcessed;
+                ::boost::posix_time::time_duration  totalProcessingTime;
             };
 
             /// Compressed bytes processed so far
