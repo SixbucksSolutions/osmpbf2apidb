@@ -39,8 +39,6 @@ namespace OsmFileParser
         m_visitWays(false),
         m_visitRelations(false),
         m_visitChangesets(false),
-        m_workerThreadMutex(),
-        m_workerThreadsLaunched(0),
         m_pbfStatsManager()
     {
         ;
@@ -735,16 +733,10 @@ namespace OsmFileParser
     {
         try
         {
-            unsigned int workerId = 0;
-            // Dedicated scope to limit critical region
-            {
-                ::std::lock_guard<::std::mutex> lock( m_workerThreadMutex);
-                workerId = ++m_workerThreadsLaunched;
-            }
-
-            std::cout << "\nWorker thread " <<
-                      boost::lexical_cast<std::string>(workerId) << " started!" <<
+            /*
+            std::cout << "\nWorker thread started!" <<
                       std::endl;
+            */
 
             ::boost::posix_time::ptime  datablockProcessingStartTime;
 
@@ -756,9 +748,8 @@ namespace OsmFileParser
                     worklist.getNextDatablock();
 
                 /*
-                std::cout << "\nWorker thread " <<
-                          boost::lexical_cast<std::string>(workerId) <<
-                          " working datablock starting at offset 0x" << std::hex <<
+                std::cout << "\nWorker thread working datablock " <<
+                          "starting at offset 0x" << std::hex <<
                           currBlock.offsetStart << std::endl;
                 */
 
@@ -771,10 +762,10 @@ namespace OsmFileParser
                                            datablockProcessingStartTime );
             }
 
-
-            std::cout << "\nWorker thread " <<
-                      boost::lexical_cast<std::string>(workerId) <<
-                      " terminating normally!" << std::endl;
+            /*
+            std::cout << "\nWorker thread terminating normally!"
+                      << std::endl;
+            */
         }
         catch ( std::string const&      e )
         {

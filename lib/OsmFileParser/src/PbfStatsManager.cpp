@@ -147,15 +147,15 @@ namespace OsmFileParser
         lastProcessing = ::std::max(lastProcessing,
                                     m_relationStats.timeLastProcessed);
 
-		std::uint_fast64_t totalEntities = 
-			m_nodeStats.entitiesVisited +
-			m_wayStats.entitiesVisited +
-			m_relationStats.entitiesVisited;
+        std::uint_fast64_t totalEntities =
+            m_nodeStats.entitiesVisited +
+            m_wayStats.entitiesVisited +
+            m_relationStats.entitiesVisited;
 
-		std::cout << 
+        std::cout <<
                   "\tEntities:" << std::endl <<
                   "\t\tProcessed: " <<
-				  totalEntities <<
+                  totalEntities <<
                   std::endl <<
                   "\t\tTime (s): " <<
                   ((lastProcessing - firstProcessing).
