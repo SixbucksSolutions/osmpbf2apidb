@@ -11,12 +11,7 @@ namespace OsmDataWriter
     namespace PostgresqlApiDb
     {
         NoTableConstraints::NoTableConstraints():
-            m_visitNodeMutex(),
-            m_visitWayMutex(),
-            m_visitRelationMutex(),
-            m_nodesVisited(0),
-            m_waysVisited(0),
-            m_relationsVisited(0)
+            m_workerThreadList()
         {
             ;
         }
@@ -24,74 +19,37 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
-            bool shouldPrint(false);
-
-            // Dedicated scope to limit critical sections
-            {
-                ::std::lock_guard<::std::mutex> lock( m_visitNodeMutex);
-                ++m_nodesVisited;
-            }
-
-            /*
-            if ( node.getTags().size() > 0 )
-            {
-                shouldPrint = true;
-            }
-            */
-
-
-            if ( shouldPrint == true )
-            {
-                std::cout << std::endl << node.toString() << std::endl;
-            }
+            _addWorkerThreadToThreadList();
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
-            bool shouldPrint(false);
-
-            // Dedicated scope to limit critical sections
-            {
-                ::std::lock_guard<::std::mutex> lock( m_visitWayMutex );
-                ++m_waysVisited;
-            }
-
-            /*
-            if ( way.getTags().size() > 0 )
-            {
-                shouldPrint = true;
-            }
-            */
-
-            if ( shouldPrint == true )
-            {
-                std::cout << std::endl << way.toString() << std::endl;
-            }
+            _addWorkerThreadToThreadList();
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& relation )
         {
-            bool shouldPrint(false);
-
-            {
-                ::std::lock_guard<::std::mutex> lock( m_visitRelationMutex );
-                ++m_relationsVisited;
-
-                /*
-                if ( m_relationsVisited < 4 )
-                {
-                    shouldPrint = true;
-                }
-                */
-            }
-
-            if ( shouldPrint == true )
-            {
-                std::cout << std::endl << relation.toString() << std::endl;
-            }
+            _addWorkerThreadToThreadList();
         }
 
+        void NoTableConstraints::_addWorkerThreadToThreadList()
+        {
+            if ( m_workerThreadList.contains() == false )
+			{
+				m_workerThreadList.add();
+
+				/*
+				std::cout << "Added new worker thread #" <<
+					std::dec << m_workerThreadList.getIndex() << 
+					" with thread hash 0x" << std::hex <<
+					::std::this_thread::get_id() << std::endl;
+				*/
+
+				// TODO: pick up here, create entry in list of file pointer
+				//		structs for this worker thread
+			}
+        }
     }
 }

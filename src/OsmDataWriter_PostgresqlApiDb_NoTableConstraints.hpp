@@ -7,12 +7,12 @@
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Way.hpp"
+#include "WorkerThreadList.hpp"
 
 namespace OsmDataWriter
 {
     namespace PostgresqlApiDb
     {
-
         class NoTableConstraints : public ::OsmFileParser::PrimitiveVisitor
         {
             public:
@@ -53,28 +53,10 @@ namespace OsmDataWriter
                     relation
                 );
 
-                ::std::uint_fast64_t    getVisitedNodes() const
-                {
-                    return m_nodesVisited;
-                }
-
-                ::std::uint_fast64_t    getVisitedWays() const
-                {
-                    return m_waysVisited;
-                }
-
-                ::std::uint_fast64_t    getVisitedRelations() const
-                {
-                    return m_relationsVisited;
-                }
-
             protected:
-                ::std::mutex            m_visitNodeMutex;
-                ::std::mutex            m_visitWayMutex;
-                ::std::mutex            m_visitRelationMutex;
-                ::std::uint_fast64_t    m_nodesVisited;
-                ::std::uint_fast64_t    m_waysVisited;
-                ::std::uint_fast64_t    m_relationsVisited;
+                WorkerThreadList        m_workerThreadList;
+
+                void _addWorkerThreadToThreadList();
         };
 
     }
