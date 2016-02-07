@@ -223,7 +223,7 @@ namespace OsmFileParser
                 (((relationStats.timeLastProcessed - relationStats.timeFirstProcessed).
                   total_microseconds()) / 1000000.0);
 
-            const ::std::string unitChars[4] = { "", "K", "M", "B" };
+            const ::std::string unitChars[4] = { " ", "K", "M", "B" };
 
             if ( totalElements > 0 )
             {

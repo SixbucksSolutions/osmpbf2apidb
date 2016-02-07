@@ -3,7 +3,8 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <iostream>
+#include <utility>
+#include <memory>
 #include <boost/filesystem.hpp>
 #include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
 #include "OsmFileParser/include/Primitive.hpp"
@@ -16,24 +17,6 @@ namespace OsmDataWriter
     namespace PostgresqlApiDb
     {
         NoTableConstraints::NoTableConstraints(
-            const ::std::string&        sqlDirectory ) :
-
-            m_outputDir(::boost::filesystem::path(sqlDirectory)),
-            m_workerThreadList(),
-            m_fileSectionList(),
-            m_filePointersMutex(),
-            m_filePointers()
-        {
-            if ( ::boost::filesystem::is_directory(m_outputDir) ==
-                    false )
-            {
-                throw ( "Cannot open output SQL directory: " );
-            }
-
-            _createSectionNameList();
-        }
-
-        NoTableConstraints::NoTableConstraints(
             const ::boost::filesystem::path&        sqlDirectory) :
 
             m_outputDir(sqlDirectory),
@@ -45,7 +28,8 @@ namespace OsmDataWriter
             if ( ::boost::filesystem::is_directory(m_outputDir) ==
                     false )
             {
-                throw ( "Cannot open output SQL directory: " );
+                throw ( ::std::string("Cannot open output SQL directory ") +
+                        m_outputDir.string() );
             }
 
             _createSectionNameList();
@@ -82,19 +66,19 @@ namespace OsmDataWriter
                     ::std::this_thread::get_id() << std::endl;
                 */
 
-                _createFilePointers( m_workerThreadList.getIndex() );
+                _createFilePointerMap( m_workerThreadList.getIndex() );
             }
         }
 
-        void NoTableConstraints::_createFilePointers(
+        void NoTableConstraints::_createFilePointerMap(
             const unsigned int  workerThreadIndex )
         {
-            // Create all file pointers
+            ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
 
-            // Acquire file pointer list mutex
-
-            // Add file pointers to file pointer list
-
+            ::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >> emptyMap;
+            m_filePointers.insert(
+                ::std::make_pair(workerThreadIndex, emptyMap) );
         }
 
         void NoTableConstraints::_createSectionNameList()
