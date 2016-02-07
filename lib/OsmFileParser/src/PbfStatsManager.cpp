@@ -245,7 +245,7 @@ namespace OsmFileParser
             else
             {
                 std::cout <<
-                          "E:    - (    - K/s)";
+                          "E:                0";
             }
 
 
@@ -269,7 +269,7 @@ namespace OsmFileParser
             else
             {
                 std::cout <<
-                          " | N:    - (    - K/s)";
+                          " | N:                0";
             }
 
             if ( wayStats.entitiesVisited > 0 )
@@ -292,7 +292,7 @@ namespace OsmFileParser
             else
             {
                 std::cout <<
-                          " | W:    - (    - K/s)";
+                          " | W:                0";
             }
 
             if ( relationStats.entitiesVisited > 0 )
@@ -315,7 +315,7 @@ namespace OsmFileParser
             else
             {
                 std::cout <<
-                          " | R:    - (    - K/s)";
+                          " | R:                0";
             }
 
             ::std::cout << ::std::endl;
