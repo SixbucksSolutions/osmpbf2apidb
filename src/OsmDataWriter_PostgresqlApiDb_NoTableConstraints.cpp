@@ -38,7 +38,14 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
-            _addWorkerThreadToThreadList();
+            const unsigned int workerIndex =
+                _addWorkerThreadToThreadList();
+
+            ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
+                    workerFiles = _getWorkerFiles(workerIndex);
+
+            // Create table headers if needed
+            _createNodeTables(workerFiles);
         }
 
         void NoTableConstraints::visit(
@@ -53,7 +60,7 @@ namespace OsmDataWriter
             _addWorkerThreadToThreadList();
         }
 
-        void NoTableConstraints::_addWorkerThreadToThreadList()
+        unsigned int NoTableConstraints::_addWorkerThreadToThreadList()
         {
             if ( m_workerThreadList.contains() == false )
             {
@@ -68,6 +75,8 @@ namespace OsmDataWriter
 
                 _createFilePointerMap( m_workerThreadList.getIndex() );
             }
+
+            return m_workerThreadList.getIndex();
         }
 
         void NoTableConstraints::_createFilePointerMap(
@@ -75,8 +84,8 @@ namespace OsmDataWriter
         {
             ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
 
-            ::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >> emptyMap;
+            ::std::map <::std::string, ::std::shared_ptr<::std::ostream>>
+                    emptyMap;
             m_filePointers.insert(
                 ::std::make_pair(workerThreadIndex, emptyMap) );
         }
@@ -102,6 +111,23 @@ namespace OsmDataWriter
             m_fileSectionList.push_back("relations");
             m_fileSectionList.push_back("relation_members");
             m_fileSectionList.push_back("relation_tags");
+        }
+
+        ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
+                NoTableConstraints::_getWorkerFiles(
+                    const unsigned int      workerThreadIndex )
+        {
+            ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
+
+            return m_filePointers.at(workerThreadIndex);
+        }
+
+
+        void NoTableConstraints::_createNodeTables(
+            ::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >>& workerFiles )
+        {
+			;
         }
     }
 }

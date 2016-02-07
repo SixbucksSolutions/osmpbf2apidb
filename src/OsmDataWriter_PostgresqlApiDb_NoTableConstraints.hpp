@@ -75,10 +75,19 @@ namespace OsmDataWriter
 
                 void _createSectionNameList();
 
-                void _addWorkerThreadToThreadList();
+                unsigned int _addWorkerThreadToThreadList();
 
                 void _createFilePointerMap(
                     const unsigned int  workerThreadIndex
+                );
+
+                ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
+                        _getWorkerFiles(
+                            const unsigned int workerIndex
+                        );
+
+                void _createNodeTables(
+                    ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>&
                 );
         };
 

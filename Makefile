@@ -24,9 +24,10 @@ POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 all :
 	cd lib/OsmFileParser ; make
+	make astyle
 	make $(BINDIR)/osmpbf2apidb
 
-$(BINDIR)/osmpbf2apidb : $(OBJS) $(OSMFILEPARSER_LIB) | astyle $(BINDIR)
+$(BINDIR)/osmpbf2apidb : $(OBJS) $(OSMFILEPARSER_LIB) | $(BINDIR)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LD_LIBS)
 	
 astyle : $(SRCS) $(HPPS)
