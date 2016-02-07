@@ -3,6 +3,9 @@
 
 #include <cstdint>
 #include <mutex>
+#include <thread>
+#include <condition_variable>
+#include <chrono>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 namespace OsmFileParser
@@ -82,6 +85,18 @@ namespace OsmFileParser
 
             /// Mutex to protect stats as threads start reporting them
             ::std::mutex                        m_statsMutex;
+
+            /// Stats processing thread data
+            ::std::thread                       m_statsThread;
+            ::std::mutex                        m_statsThreadTermMutex;
+            ::std::condition_variable           m_statsThreadCondition;
+            bool                                m_statsThreadTerminate;
+            ::std::chrono::time_point <
+            ::std::chrono::system_clock >    m_statsWakeup;
+
+            /// Stats worker thread function
+            void _statsDisplay();
+
     };
 }
 #endif // _PBFSTATSMANAGER_HPP

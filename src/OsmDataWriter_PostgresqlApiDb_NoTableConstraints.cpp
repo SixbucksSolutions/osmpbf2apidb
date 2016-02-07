@@ -37,19 +37,19 @@ namespace OsmDataWriter
         void NoTableConstraints::_addWorkerThreadToThreadList()
         {
             if ( m_workerThreadList.contains() == false )
-			{
-				m_workerThreadList.add();
+            {
+                m_workerThreadList.add();
 
-				/*
-				std::cout << "Added new worker thread #" <<
-					std::dec << m_workerThreadList.getIndex() << 
-					" with thread hash 0x" << std::hex <<
-					::std::this_thread::get_id() << std::endl;
-				*/
+                /*
+                std::cout << "Added new worker thread #" <<
+                    std::dec << m_workerThreadList.getIndex() <<
+                    " with thread hash 0x" << std::hex <<
+                    ::std::this_thread::get_id() << std::endl;
+                */
 
-				// TODO: pick up here, create entry in list of file pointer
-				//		structs for this worker thread
-			}
+                // TODO: pick up here, create entry in list of file pointer
+                //      structs for this worker thread
+            }
         }
     }
 }
