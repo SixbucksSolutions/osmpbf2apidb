@@ -117,93 +117,11 @@ namespace OsmFileParser
         // Wait for stats thread to receive notification and terminate, so it
         //      rejoins cleanly
         m_statsThread.join();
+
         /*
         std::cout << "Stats thread has rejoined main thread cleanly" <<
                   std::endl;
         */
-
-        std::cout <<
-                  "Stats:" << std::endl <<
-
-                  "\tNodes:" << std::endl <<
-                  "\t\tProcessed: " <<
-                  ::boost::lexical_cast<std::string>(m_nodeStats.entitiesVisited) <<
-                  std::endl <<
-                  "\t\tTime (s): " <<
-                  ((m_nodeStats.timeLastProcessed - m_nodeStats.timeFirstProcessed).
-                   total_microseconds() / 1000000.0) <<
-                  std::endl <<
-                  "\t\tProcessed/second: " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_nodeStats.entitiesVisited /
-                      ((m_nodeStats.timeLastProcessed - m_nodeStats.timeFirstProcessed).
-                       total_microseconds() / 1000000.0)) <<
-                  std::endl << std::endl;
-
-        std::cout <<
-                  "\tWays:" << std::endl <<
-                  "\t\tProcessed: " <<
-                  ::boost::lexical_cast<std::string>(m_wayStats.entitiesVisited) <<
-                  std::endl <<
-                  "\t\tTime (s): " <<
-                  ((m_wayStats.timeLastProcessed - m_wayStats.timeFirstProcessed).
-                   total_microseconds() / 1000000.0) <<
-                  std::endl <<
-                  "\t\tProcessed/second: " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_wayStats.entitiesVisited /
-                      ((m_wayStats.timeLastProcessed - m_wayStats.timeFirstProcessed).
-                       total_microseconds() / 1000000.0)) <<
-                  std::endl << std::endl;
-
-        std::cout <<
-                  "\tRelations:" << std::endl <<
-                  "\t\tProcessed: " <<
-                  ::boost::lexical_cast<std::string>(m_relationStats.entitiesVisited) <<
-                  std::endl <<
-                  "\t\tTime (s): " <<
-                  ((m_relationStats.timeLastProcessed - m_relationStats.timeFirstProcessed).
-                   total_microseconds() / 1000000.0) <<
-                  std::endl <<
-                  "\t\tProcessed/second: " <<
-                  ::boost::lexical_cast<std::string>(
-                      m_relationStats.entitiesVisited /
-                      ((m_relationStats.timeLastProcessed - m_relationStats.timeFirstProcessed).
-                       total_microseconds() / 1000000.0)) <<
-                  std::endl << std::endl;
-
-        ::boost::posix_time::ptime firstProcessing =
-            ::std::min(m_nodeStats.timeFirstProcessed, m_wayStats.timeFirstProcessed);
-        firstProcessing = ::std::min(firstProcessing,
-                                     m_relationStats.timeFirstProcessed);
-
-        ::boost::posix_time::ptime lastProcessing =
-            ::std::max(m_nodeStats.timeLastProcessed, m_wayStats.timeLastProcessed);
-        lastProcessing = ::std::max(lastProcessing,
-                                    m_relationStats.timeLastProcessed);
-
-        std::uint_fast64_t totalEntities =
-            m_nodeStats.entitiesVisited +
-            m_wayStats.entitiesVisited +
-            m_relationStats.entitiesVisited;
-
-        std::cout <<
-                  "\tEntities:" << std::endl <<
-                  "\t\tProcessed: " <<
-                  totalEntities <<
-                  std::endl <<
-                  "\t\tTime (s): " <<
-                  ((lastProcessing - firstProcessing).
-                   total_microseconds() / 1000000.0) <<
-                  std::endl <<
-                  "\t\tProcessed/second: " <<
-                  ::boost::lexical_cast<std::string>(
-                      totalEntities /
-                      ((lastProcessing - firstProcessing).
-                       total_microseconds() / 1000000.0)) <<
-                  std::endl << std::endl;
-
-
     }
 
     void PbfStatsManager::_statsDisplay()
@@ -260,7 +178,7 @@ namespace OsmFileParser
                 relationStats   = m_relationStats;
             }
 
-            // Time display
+            // Relative time display (hours/mins/secs since stats epoch)
             char timeFormat[32];
             const ::std::time_t now_c = ::std::chrono::system_clock::to_time_t(
                                             ::std::chrono::system_clock::now());
