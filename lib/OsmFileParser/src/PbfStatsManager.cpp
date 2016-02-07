@@ -178,16 +178,23 @@ namespace OsmFileParser
                 relationStats   = m_relationStats;
             }
 
+            // Total processing time to date in seconds
+            const ::std::chrono::seconds totalSeconds =
+                ::std::chrono::duration_cast<::std::chrono::seconds>(currTime - statsEpoch);
+
+
             // Relative time display (hours/mins/secs since stats epoch)
-            char timeFormat[32];
-            const ::std::time_t now_c = ::std::chrono::system_clock::to_time_t(
-                                            ::std::chrono::system_clock::now());
-            ::std::strftime( timeFormat, sizeof(timeFormat),
-                             "%F %T", ::std::localtime(&now_c));
-            ::std::cout << timeFormat << "  ";
+            const unsigned int displayHours   = totalSeconds.count() / 3600;
+            const unsigned int displayMinutes = (totalSeconds.count() % 3600) / 60;
+            const unsigned int displaySeconds = totalSeconds.count() % 60;
+
+            ::std::cout << ::boost::format("%4dh%2dm%2ds  ") %
+                        displayHours %
+                        displayMinutes %
+                        displaySeconds;
 
             // % complete (based on processed compressed bytes / total compressed bytes)
-            const uint_fast64_t percentComplete =
+            const ::std::uint_fast64_t percentComplete =
                 ( (processedBytes * 100) / totalBytes );
 
             ::std::cout << ::boost::format("%3d") % percentComplete << "%";
@@ -199,8 +206,6 @@ namespace OsmFileParser
                 wayStats.entitiesVisited +
                 relationStats.entitiesVisited;
 
-            const ::std::chrono::seconds totalSeconds =
-                ::std::chrono::duration_cast<::std::chrono::seconds>(currTime - statsEpoch);
             const ::std::uint_fast64_t elementRate = totalElements / totalSeconds.count();
 
             const ::std::uint_fast64_t nodeRate =
