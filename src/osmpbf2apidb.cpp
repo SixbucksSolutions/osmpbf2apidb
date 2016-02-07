@@ -25,7 +25,8 @@ int main(
     try
     {
         ::OsmFileParser::PbfReader pbfReader;
-        ::OsmDataWriter::PostgresqlApiDb::NoTableConstraints sqlFileWriter;
+        ::OsmDataWriter::PostgresqlApiDb::NoTableConstraints sqlFileWriter(
+            sqlOutputDir);
         pbfReader.parse(pbfFilename, &sqlFileWriter, numberWorkerThreads);
     }
     catch ( char const* const  e )

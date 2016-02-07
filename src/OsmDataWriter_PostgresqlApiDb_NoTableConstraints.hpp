@@ -3,6 +3,11 @@
 
 #include <cstdint>
 #include <mutex>
+#include <map>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <boost/filesystem.hpp>
 #include "OsmFileParser/include/Primitive.hpp"
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
@@ -16,7 +21,13 @@ namespace OsmDataWriter
         class NoTableConstraints : public ::OsmFileParser::PrimitiveVisitor
         {
             public:
-                NoTableConstraints();
+                NoTableConstraints(
+                    const ::std::string&                sqlDirectory
+                );
+
+                NoTableConstraints(
+                    const ::boost::filesystem::path&    sqlDirectory
+                );
 
                 virtual ~NoTableConstraints() { }
 
@@ -54,9 +65,23 @@ namespace OsmDataWriter
                 );
 
             protected:
-                WorkerThreadList        m_workerThreadList;
+                ::boost::filesystem::path       m_outputDir;
+                WorkerThreadList                m_workerThreadList;
+                ::std::vector<::std::string>    m_fileSectionList;
+                ::std::mutex                    m_filePointersMutex;
+
+                typedef ::std::map < unsigned int,
+                        ::std::map<::std::string, ::std::ostream >> SqlFilePointers;
+
+                SqlFilePointers                 m_filePointers;
+
+                void _createSectionNameList();
 
                 void _addWorkerThreadToThreadList();
+
+                void _createFilePointers(
+                    const unsigned int  workerThreadIndex
+                );
         };
 
     }

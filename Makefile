@@ -9,7 +9,7 @@ OBJS := $(addprefix $(OBJDIR)/,$(notdir $(SRCS:.cpp=.o)))
 BINDIR := bin
 
 LD=g++
-LD_LIBS=-pthread -lz -lprotobuf-lite -losmpbf
+LD_LIBS=-lboost_system -lboost_filesystem -pthread -lz -lprotobuf-lite -losmpbf
 
 OSMFILEPARSER_LIB := lib/OsmFileParser/lib/libosmfileparser.a
 
