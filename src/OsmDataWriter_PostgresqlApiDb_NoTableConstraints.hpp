@@ -110,10 +110,14 @@ namespace OsmDataWriter
                     FileStreamMap&                              workerFileStreams
                 );
 
-                ::std::int_fast64_t _lonLatToTileNumber(
-                    const ::std::int_fast32_t   lon,
-                    const ::std::int_fast64_t   lat
+                unsigned int _lonLatToTileNumber(
+                    const ::OsmFileParser::LonLatCoordinate& lonLat
                 ) const;
+
+                ::std::string _generateISO8601(
+                    const ::OsmFileParser::OsmPrimitive::Timestamp&     timestamp
+                ) const;
+
         };
     }
 }

@@ -7,6 +7,8 @@
 #include <memory>
 #include <sstream>
 #include <fstream>
+#include <ctime>
+#include <cmath>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
@@ -14,6 +16,7 @@
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/Way.hpp"
+#include "OsmFileParser/include/LonLatCoordinate.hpp"
 
 namespace OsmDataWriter
 {
@@ -249,13 +252,14 @@ namespace OsmDataWriter
 
             ::std::stringstream nodesStream;
             nodesStream <<
-                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t1\n") %
+                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t%d\n") %
                         node.getPrimitiveId() %
                         lat %
                         lon %
                         node.getChangesetId() %
-                        "1970-01-01 00:00:00.000" %
-                        _lonLatToTileNumber(lon, lat);
+                        _generateISO8601(node.getTimestamp()) %
+                        _lonLatToTileNumber(lonLat) %
+                        node.getVersion();
 
             _writeToFileStream( "current_nodes", nodesStream.str(),
                                 workerFileStreams );
@@ -264,24 +268,57 @@ namespace OsmDataWriter
             nodesStream.str( ::std::string() );
 
             nodesStream <<
-                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t1\t\\N\n") %
+                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t%d\t\\N\n") %
                         node.getPrimitiveId() %
                         lat %
                         lon %
                         node.getChangesetId() %
-                        "1970-01-01 00:00:00.000" %
-                        _lonLatToTileNumber(lon, lat);
+                        _generateISO8601(node.getTimestamp()) %
+                        _lonLatToTileNumber(lonLat) %
+                        node.getVersion();
 
             _writeToFileStream( "nodes", nodesStream.str(),
                                 workerFileStreams );
 
         }
 
-        ::std::int_fast64_t NoTableConstraints::_lonLatToTileNumber(
-            const ::std::int_fast32_t   lon,
-            const ::std::int_fast32_t   lat ) const
+        ::std::string NoTableConstraints::_generateISO8601(
+            const ::OsmFileParser::OsmPrimitive::Timestamp& timestamp ) const
         {
-            return 1;
+            char conversionBuffer[32];
+            ::std::strftime( reinterpret_cast<char*>(&conversionBuffer),
+                             sizeof(conversionBuffer),
+                             "%F %T",
+                             ::std::gmtime(&timestamp) );
+
+            return ::std::string(conversionBuffer);
+        }
+
+        unsigned int NoTableConstraints::_lonLatToTileNumber(
+            const ::OsmFileParser::LonLatCoordinate&   lonLat ) const
+        {
+            ::std::int_fast32_t lon;
+            ::std::int_fast32_t lat;
+            lonLat.getLonLat(lon, lat);
+            const double lonDegree =
+                ::OsmFileParser::LonLatCoordinate::convertNanodegreeToDegree(
+                    lon );
+            const double latDegree =
+                ::OsmFileParser::LonLatCoordinate::convertNanodegreeToDegree(
+                    lat );
+
+            const int lonInt = ::std::round((lonDegree + 180.0) * 65535.0 / 360.0);
+            const int latInt = ::std::round((latDegree + 90.0) * 65535.0 / 180.0);
+
+            unsigned int tile = 0;
+
+            for (int i = 15; i >= 0; i--)
+            {
+                tile = (tile << 1) | ((lonInt >> i) & 1);
+                tile = (tile << 1) | ((latInt >> i) & 1);
+            }
+
+            return tile;
         }
     }
 }
