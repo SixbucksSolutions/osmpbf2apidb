@@ -65,15 +65,13 @@ namespace OsmDataWriter
                 ::boost::filesystem::path       m_outputDir;
                 WorkerThreadList                m_workerThreadList;
                 ::std::vector<::std::string>    m_fileSectionList;
-                ::std::mutex                    m_filePointersMutex;
+                ::std::mutex                    m_workerFileStreamMapsMutex;
 
-                typedef ::std::map < unsigned int,
-                        ::std::shared_ptr
-                        <::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
-                        >>
-                        SqlFilePointers;
+                typedef ::std::shared_ptr <
+                ::std::map <::std::string,
+                ::std::shared_ptr<::std::ostream >>> FileStreamMap;
 
-                SqlFilePointers                 m_filePointers;
+                ::std::map<unsigned int, FileStreamMap> m_workerFileStreamMaps;
 
                 void _createSectionNameList();
 
@@ -83,21 +81,19 @@ namespace OsmDataWriter
                     const unsigned int  workerThreadIndex
                 );
 
-                ::std::shared_ptr<::std::map<::std::string, ::std::shared_ptr<::std::ostream>>>
-                _getWorkerFiles(
+                FileStreamMap _getWorkerFileStreamMap(
                     const unsigned int workerIndex
                 );
 
-                ::std::shared_ptr<::std::ostream>   _createTable(
+                ::std::shared_ptr<::std::ostream> _createTable(
                     const unsigned int      workerIndex,
                     const ::std::string&    tableName,
                     const ::std::string&    tableSchema
                 );
 
                 void _createNodeTables(
-                    const unsigned int                      workerIndex,
-                    ::std::shared_ptr <::std::map <::std::string,
-                    ::std::shared_ptr<::std::ostream >>>&     workerFiles
+                    const unsigned int      workerIndex,
+                    FileStreamMap&          workerFileStreams
                 );
         };
 

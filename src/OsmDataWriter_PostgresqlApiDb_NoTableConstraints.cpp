@@ -25,8 +25,8 @@ namespace OsmDataWriter
             m_outputDir(sqlDirectory),
             m_workerThreadList(),
             m_fileSectionList(),
-            m_filePointersMutex(),
-            m_filePointers()
+            m_workerFileStreamMapsMutex(),
+            m_workerFileStreamMaps()
         {
             if ( ::boost::filesystem::is_directory(m_outputDir) ==
                     false )
@@ -50,12 +50,11 @@ namespace OsmDataWriter
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
-            ::std::shared_ptr <::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>> workerFiles =
-                _getWorkerFiles(workerIndex);
+            FileStreamMap workerFileStreams =
+                _getWorkerFileStreamMap(workerIndex);
 
             // Create table headers if needed
-            _createNodeTables(workerIndex, workerFiles);
+            _createNodeTables(workerIndex, workerFileStreams);
         }
 
         void NoTableConstraints::visit(
@@ -92,15 +91,12 @@ namespace OsmDataWriter
         void NoTableConstraints::_createFilePointerMap(
             const unsigned int  workerThreadIndex )
         {
-            ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
+            FileStreamMap emptyMap = FileStreamMap(
+                                         new ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>);
 
-            ::std::shared_ptr <::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>>
-            emptyMap = ::std::shared_ptr <::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>> (new
-                                                  ::std::map <::std::string, ::std::shared_ptr<::std::ostream>>);
+            ::std::lock_guard<::std::mutex> lockGuard(m_workerFileStreamMapsMutex);
 
-            m_filePointers.insert(
+            m_workerFileStreamMaps.insert(
                 ::std::make_pair(workerThreadIndex, emptyMap) );
 
             /*
@@ -132,21 +128,18 @@ namespace OsmDataWriter
             m_fileSectionList.push_back("relation_tags");
         }
 
-        ::std::shared_ptr <::std::map <::std::string,
-        ::std::shared_ptr<::std::ostream >>>
-        NoTableConstraints::_getWorkerFiles(
+        NoTableConstraints::FileStreamMap NoTableConstraints::_getWorkerFileStreamMap(
             const unsigned int      workerThreadIndex )
         {
-            ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
+            ::std::lock_guard<::std::mutex> lockGuard(m_workerFileStreamMapsMutex);
 
-            return m_filePointers.at(workerThreadIndex);
+            return m_workerFileStreamMaps.at(workerThreadIndex);
         }
 
 
         void NoTableConstraints::_createNodeTables(
             const unsigned int                      workerIndex,
-            ::std::shared_ptr <::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>>&    workerFiles )
+            NoTableConstraints::FileStreamMap&      workerFiles )
         {
             if ( workerFiles->count(::std::string("current_nodes")) == 0 )
             {
@@ -191,9 +184,7 @@ namespace OsmDataWriter
             //std::cout << "Leaving _createNodeTables" << std::endl;
         }
 
-        ::std::shared_ptr<::std::ostream>
-        NoTableConstraints::_createTable(
-
+        ::std::shared_ptr<::std::ostream> NoTableConstraints::_createTable(
             const unsigned int      workerIndex,
             const ::std::string&    tableName,
             const ::std::string&    tableSchema )
@@ -219,9 +210,9 @@ namespace OsmDataWriter
                 */
 
                 tableStream = ::std::shared_ptr<::std::ostream>(
-                                  new std::ofstream(tablePath.string(),
-                                                    ::std::ofstream::binary) );
-                //std::cout << "File opened" << std::endl;
+                                  new std::ofstream(
+                                      tablePath.string(),
+                                      ::std::ofstream::binary) );
 
                 // Write UTF-8 byte-order mark
                 //
@@ -232,9 +223,7 @@ namespace OsmDataWriter
                 tableStream->write( reinterpret_cast<const char*>(
                                         utf8BOM), sizeof(utf8BOM) );
 
-                //std::cout << "Writing schema" << std::endl;
                 *tableStream << tableSchema << std::endl;
-                //std::cout << "Schema written" << std::endl;
             }
             catch ( ... )
             {
