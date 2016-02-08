@@ -68,7 +68,9 @@ namespace OsmDataWriter
                 ::std::mutex                    m_filePointersMutex;
 
                 typedef ::std::map < unsigned int,
-                        ::std::map<::std::string, ::std::shared_ptr<::std::ostream> >>
+                        ::std::shared_ptr
+                        <::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
+                        >>
                         SqlFilePointers;
 
                 SqlFilePointers                 m_filePointers;
@@ -81,10 +83,10 @@ namespace OsmDataWriter
                     const unsigned int  workerThreadIndex
                 );
 
-                ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
-                        _getWorkerFiles(
-                            const unsigned int workerIndex
-                        );
+                ::std::shared_ptr<::std::map<::std::string, ::std::shared_ptr<::std::ostream>>>
+                _getWorkerFiles(
+                    const unsigned int workerIndex
+                );
 
                 ::std::shared_ptr<::std::ostream>   _createTable(
                     const unsigned int      workerIndex,
@@ -94,8 +96,8 @@ namespace OsmDataWriter
 
                 void _createNodeTables(
                     const unsigned int                      workerIndex,
-                    ::std::map <::std::string,
-                    ::std::shared_ptr<::std::ostream >>&     workerFiles
+                    ::std::shared_ptr <::std::map <::std::string,
+                    ::std::shared_ptr<::std::ostream >>>&     workerFiles
                 );
         };
 

@@ -47,28 +47,27 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
-            /*
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
-            ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
-                    workerFiles = _getWorkerFiles(workerIndex);
+            ::std::shared_ptr <::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >>> workerFiles =
+                _getWorkerFiles(workerIndex);
 
             // Create table headers if needed
             _createNodeTables(workerIndex, workerFiles);
-            */
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
-            //_addWorkerThreadToThreadList();
+            _addWorkerThreadToThreadList();
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& relation )
         {
-            //_addWorkerThreadToThreadList();
+            _addWorkerThreadToThreadList();
         }
 
         unsigned int NoTableConstraints::_addWorkerThreadToThreadList()
@@ -85,13 +84,6 @@ namespace OsmDataWriter
                 */
 
                 _createFilePointerMap( m_workerThreadList.getIndex() );
-
-
-                /*
-                std::cout << "Created worker thread entry and file list"
-                    << std::endl;
-                */
-
             }
 
             return m_workerThreadList.getIndex();
@@ -102,10 +94,19 @@ namespace OsmDataWriter
         {
             ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
 
-            ::std::map <::std::string, ::std::shared_ptr<::std::ostream>>
-                    emptyMap;
+            ::std::shared_ptr <::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >>>
+            emptyMap = ::std::shared_ptr <::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >>> (new
+                                                  ::std::map <::std::string, ::std::shared_ptr<::std::ostream>>);
+
             m_filePointers.insert(
                 ::std::make_pair(workerThreadIndex, emptyMap) );
+
+            /*
+            ::std::cout << "Added file pointers for thread " << workerThreadIndex <<
+                        ::std::endl;
+            */
         }
 
         void NoTableConstraints::_createSectionNameList()
@@ -131,9 +132,10 @@ namespace OsmDataWriter
             m_fileSectionList.push_back("relation_tags");
         }
 
-        ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>
-                NoTableConstraints::_getWorkerFiles(
-                    const unsigned int      workerThreadIndex )
+        ::std::shared_ptr <::std::map <::std::string,
+        ::std::shared_ptr<::std::ostream >>>
+        NoTableConstraints::_getWorkerFiles(
+            const unsigned int      workerThreadIndex )
         {
             ::std::lock_guard<::std::mutex> lockGuard(m_filePointersMutex);
 
@@ -143,12 +145,13 @@ namespace OsmDataWriter
 
         void NoTableConstraints::_createNodeTables(
             const unsigned int                      workerIndex,
-            ::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>&    workerFiles )
+            ::std::shared_ptr <::std::map <::std::string,
+            ::std::shared_ptr<::std::ostream >>>&    workerFiles )
         {
-            if ( workerFiles.count("current_nodes") == 0 )
+            if ( workerFiles->count(::std::string("current_nodes")) == 0 )
             {
-                workerFiles.insert(
+                std::cout << "Have to create tables" << std::endl;
+                workerFiles->insert(
                     ::std::make_pair( std::string("current_nodes"),
                                       _createTable(
                                           workerIndex,
@@ -158,7 +161,7 @@ namespace OsmDataWriter
                                           "version) FROM stdin;")) );
 
 
-                workerFiles.insert(
+                workerFiles->insert(
                     ::std::make_pair( ::std::string("current_node_tags"),
                                       _createTable(
                                           workerIndex,
@@ -167,7 +170,7 @@ namespace OsmDataWriter
                                           "FROM stdin;")) );
 
 
-                workerFiles.insert(
+                workerFiles->insert(
                     ::std::make_pair( ::std::string("nodes" ),
                                       _createTable(
                                           workerIndex,
@@ -176,7 +179,7 @@ namespace OsmDataWriter
                                           "changeset_id, visible, \"timestamp\", tile, "
                                           "version, redaction_id) FROM stdin;")) );
 
-                workerFiles.insert(
+                workerFiles->insert(
                     ::std::make_pair( ::std::string("node_tags"),
                                       _createTable(
                                           workerIndex,

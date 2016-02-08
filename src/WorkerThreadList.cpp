@@ -13,7 +13,7 @@ WorkerThreadList::WorkerThreadList() :
 bool WorkerThreadList::contains(
     const ::std::thread::id&    thread )
 {
-    ::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
+    //::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
 
     return ( m_workerThreads.find(thread) !=
              m_workerThreads.end() );
@@ -31,7 +31,7 @@ void WorkerThreadList::add(
 unsigned int WorkerThreadList::getIndex(
     const ::std::thread::id&    thread )
 {
-    ::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
+    //::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
 
     return ( m_workerThreads.at(thread) );
 }
