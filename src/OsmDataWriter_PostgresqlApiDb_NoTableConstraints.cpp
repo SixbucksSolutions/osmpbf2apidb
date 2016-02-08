@@ -5,7 +5,10 @@
 #include <string>
 #include <utility>
 #include <memory>
+#include <sstream>
+#include <fstream>
 #include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 #include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
 #include "OsmFileParser/include/Primitive.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
@@ -32,12 +35,19 @@ namespace OsmDataWriter
                         m_outputDir.string() );
             }
 
+            if ( ::boost::filesystem::is_empty(m_outputDir) == false )
+            {
+                throw ( ::std::string("Output SQL directory ") +
+                        m_outputDir.string() + " is not empty" );
+            }
+
             _createSectionNameList();
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
+            /*
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -45,19 +55,20 @@ namespace OsmDataWriter
                     workerFiles = _getWorkerFiles(workerIndex);
 
             // Create table headers if needed
-            _createNodeTables(workerFiles);
+            _createNodeTables(workerIndex, workerFiles);
+            */
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
-            _addWorkerThreadToThreadList();
+            //_addWorkerThreadToThreadList();
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& relation )
         {
-            _addWorkerThreadToThreadList();
+            //_addWorkerThreadToThreadList();
         }
 
         unsigned int NoTableConstraints::_addWorkerThreadToThreadList()
@@ -74,6 +85,13 @@ namespace OsmDataWriter
                 */
 
                 _createFilePointerMap( m_workerThreadList.getIndex() );
+
+
+                /*
+                std::cout << "Created worker thread entry and file list"
+                    << std::endl;
+                */
+
             }
 
             return m_workerThreadList.getIndex();
@@ -124,10 +142,105 @@ namespace OsmDataWriter
 
 
         void NoTableConstraints::_createNodeTables(
+            const unsigned int                      workerIndex,
             ::std::map <::std::string,
-            ::std::shared_ptr<::std::ostream >>& workerFiles )
+            ::std::shared_ptr<::std::ostream >>&    workerFiles )
         {
-			;
+            if ( workerFiles.count("current_nodes") == 0 )
+            {
+                workerFiles.insert(
+                    ::std::make_pair( std::string("current_nodes"),
+                                      _createTable(
+                                          workerIndex,
+                                          "current_nodes",
+                                          "COPY current_nodes (id, latitude, longitude, "
+                                          "changeset_id, visible, \"timestamp\", tile, "
+                                          "version) FROM stdin;")) );
+
+
+                workerFiles.insert(
+                    ::std::make_pair( ::std::string("current_node_tags"),
+                                      _createTable(
+                                          workerIndex,
+                                          "current_node_tags",
+                                          "COPY current_node_tags (node_id, k, v) "
+                                          "FROM stdin;")) );
+
+
+                workerFiles.insert(
+                    ::std::make_pair( ::std::string("nodes" ),
+                                      _createTable(
+                                          workerIndex,
+                                          "nodes",
+                                          "COPY nodes (node_id, latitude, longitude, "
+                                          "changeset_id, visible, \"timestamp\", tile, "
+                                          "version, redaction_id) FROM stdin;")) );
+
+                workerFiles.insert(
+                    ::std::make_pair( ::std::string("node_tags"),
+                                      _createTable(
+                                          workerIndex,
+                                          "node_tags",
+                                          "COPY node_tags (node_id, version, k, v) "
+                                          "FROM stdin;\n")) );
+            }
+
+            //std::cout << "Leaving _createNodeTables" << std::endl;
         }
+
+        ::std::shared_ptr<::std::ostream>
+        NoTableConstraints::_createTable(
+
+            const unsigned int      workerIndex,
+            const ::std::string&    tableName,
+            const ::std::string&    tableSchema )
+        {
+            // Have to build filename with a stream as
+            //      boost::format is not trivial to convert
+            //      to a string
+            ::std::stringstream filenameStream;
+            filenameStream << ::boost::format("%s_%05d.sql") %
+                           tableName %
+                           workerIndex;
+
+            const ::boost::filesystem::path tablePath(
+                m_outputDir / filenameStream.str() );
+
+            ::std::shared_ptr<::std::ostream> tableStream;
+
+            try
+            {
+                /*
+                std::cout << "Trying to open file " << tablePath.string() <<
+                    std::endl;
+                */
+
+                tableStream = ::std::shared_ptr<::std::ostream>(
+                                  new std::ofstream(tablePath.string(),
+                                                    ::std::ofstream::binary) );
+                //std::cout << "File opened" << std::endl;
+
+                // Write UTF-8 byte-order mark
+                //
+                //      Byte-order mark is Totally optional as UTF-8
+                //      can easily be determined by bitstream, but
+                //      removes any ambiguity
+                const unsigned char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
+                tableStream->write( reinterpret_cast<const char*>(
+                                        utf8BOM), sizeof(utf8BOM) );
+
+                //std::cout << "Writing schema" << std::endl;
+                *tableStream << tableSchema << std::endl;
+                //std::cout << "Schema written" << std::endl;
+            }
+            catch ( ... )
+            {
+                throw ( std::string("Error when trying to create table " ) +
+                        tablePath.string() );
+            }
+
+            return tableStream;
+        }
+
     }
 }

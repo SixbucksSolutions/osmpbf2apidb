@@ -86,8 +86,16 @@ namespace OsmDataWriter
                             const unsigned int workerIndex
                         );
 
+                ::std::shared_ptr<::std::ostream>   _createTable(
+                    const unsigned int      workerIndex,
+                    const ::std::string&    tableName,
+                    const ::std::string&    tableSchema
+                );
+
                 void _createNodeTables(
-                    ::std::map<::std::string, ::std::shared_ptr<::std::ostream>>&
+                    const unsigned int                      workerIndex,
+                    ::std::map <::std::string,
+                    ::std::shared_ptr<::std::ostream >>&     workerFiles
                 );
         };
 
