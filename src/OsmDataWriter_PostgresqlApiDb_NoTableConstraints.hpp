@@ -91,14 +91,31 @@ namespace OsmDataWriter
                     const ::std::string&    tableSchema
                 );
 
+                void _writeToFileStream(
+                    const ::std::string&    fileStreamName,
+                    const ::std::string&    writeData,
+                    FileStreamMap&          workerFileStreams
+                )
+                {
+                    *(workerFileStreams->at(fileStreamName)) << writeData;
+                }
+
                 void _createNodeTables(
                     const unsigned int      workerIndex,
                     FileStreamMap&          workerFileStreams
                 );
+
+                void _writeNodeToTables(
+                    const ::OsmFileParser::OsmPrimitive::Node&  node,
+                    FileStreamMap&                              workerFileStreams
+                );
+
+                ::std::int_fast64_t _lonLatToTileNumber(
+                    const ::std::int_fast32_t   lon,
+                    const ::std::int_fast64_t   lat
+                ) const;
         };
-
     }
-
 }
 
 #endif // _OSMDATAWRITER_POSTGRESQLAPIDB_NOCONSTRAINTS

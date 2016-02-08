@@ -55,6 +55,9 @@ namespace OsmDataWriter
 
             // Create table headers if needed
             _createNodeTables(workerIndex, workerFileStreams);
+
+            // Write this node to disk
+            _writeNodeToTables( node, workerFileStreams );
         }
 
         void NoTableConstraints::visit(
@@ -234,5 +237,51 @@ namespace OsmDataWriter
             return tableStream;
         }
 
+        void NoTableConstraints::_writeNodeToTables(
+            const ::OsmFileParser::OsmPrimitive::Node&  node,
+            NoTableConstraints::FileStreamMap&          workerFileStreams)
+        {
+            const ::OsmFileParser::LonLatCoordinate lonLat =
+                node.getLonLat();
+            ::std::int_fast32_t lon;
+            ::std::int_fast32_t lat;
+            lonLat.getLonLat(lon, lat);
+
+            ::std::stringstream nodesStream;
+            nodesStream <<
+                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t1\n") %
+                        node.getPrimitiveId() %
+                        lat %
+                        lon %
+                        node.getChangesetId() %
+                        "1970-01-01 00:00:00.000" %
+                        _lonLatToTileNumber(lon, lat);
+
+            _writeToFileStream( "current_nodes", nodesStream.str(),
+                                workerFileStreams );
+
+            // Set contents of stream back to empty string
+            nodesStream.str( ::std::string() );
+
+            nodesStream <<
+                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t1\t\\N\n") %
+                        node.getPrimitiveId() %
+                        lat %
+                        lon %
+                        node.getChangesetId() %
+                        "1970-01-01 00:00:00.000" %
+                        _lonLatToTileNumber(lon, lat);
+
+            _writeToFileStream( "nodes", nodesStream.str(),
+                                workerFileStreams );
+
+        }
+
+        ::std::int_fast64_t NoTableConstraints::_lonLatToTileNumber(
+            const ::std::int_fast32_t   lon,
+            const ::std::int_fast32_t   lat ) const
+        {
+            return 1;
+        }
     }
 }
