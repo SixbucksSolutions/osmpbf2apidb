@@ -118,6 +118,27 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Timestamp&     timestamp
                 ) const;
 
+                void _writeTagsToTable(
+                    const ::OsmFileParser::OsmPrimitive::Primitive&
+                    primitive,
+                    const ::std::string&    tableName,
+                    const ::std::string&    formatString,
+                    FileStreamMap&          workerFileStreams
+                );
+
+                void _writeTagsToTable(
+                    const ::OsmFileParser::OsmPrimitive::Primitive&
+                    primitive,
+
+                    const ::OsmFileParser::OsmPrimitive::Version
+                    primitiveVersion,
+
+                    const ::std::string&    tableName,
+                    const ::std::string&    formatString,
+                    FileStreamMap&          workerFileStreams
+                );
+
+
         };
     }
 }

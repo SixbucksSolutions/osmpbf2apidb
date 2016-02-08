@@ -11,12 +11,15 @@
 #include <cmath>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
 #include "OsmFileParser/include/Primitive.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/Way.hpp"
 #include "OsmFileParser/include/LonLatCoordinate.hpp"
+#include "OsmFileParser/include/Utf16String.hpp"
+
+#include "OsmDataWriter_PostgresqlApiDb_NoTableConstraints.hpp"
+
 
 namespace OsmDataWriter
 {
@@ -280,6 +283,17 @@ namespace OsmDataWriter
             _writeToFileStream( "nodes", nodesStream.str(),
                                 workerFileStreams );
 
+
+            _writeTagsToTable( node,
+                               ::std::string("current_node_tags"),
+                               ::std::string("%d\t%s\t%s\n"),
+                               workerFileStreams );
+
+            _writeTagsToTable( node,
+                               node.getVersion(),
+                               ::std::string("node_tags"),
+                               ::std::string("%d\t%d\t%s\t%s\n"),
+                               workerFileStreams );
         }
 
         ::std::string NoTableConstraints::_generateISO8601(
@@ -320,5 +334,66 @@ namespace OsmDataWriter
 
             return tile;
         }
+
+        void NoTableConstraints::_writeTagsToTable(
+            const ::OsmFileParser::OsmPrimitive::Primitive&
+            primitive,
+            const ::std::string&                tableName,
+            const ::std::string&                formatString,
+            NoTableConstraints::FileStreamMap&  workerFileStreams )
+        {
+            ::std::stringstream tagStream;
+
+            const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
+                primitive.getTags();
+
+            for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
+                    tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
+            {
+                tagStream.str( ::std::string() );
+
+                tagStream << ::boost::format(formatString) %
+                          primitive.getPrimitiveId() %
+                          tagsIter->getKey().toUtf8() %
+                          tagsIter->getValue().toUtf8();
+
+                _writeToFileStream( tableName, tagStream.str(),
+                                    workerFileStreams );
+            }
+        }
+
+        void NoTableConstraints::_writeTagsToTable(
+            const ::OsmFileParser::OsmPrimitive::Primitive&
+            primitive,
+
+            const ::OsmFileParser::OsmPrimitive::Version
+            primitiveVersion,
+
+            const ::std::string&                tableName,
+            const ::std::string&                formatString,
+            NoTableConstraints::FileStreamMap&  workerFileStreams )
+        {
+            ::std::stringstream tagStream;
+
+            const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
+                primitive.getTags();
+
+            for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
+                    tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
+            {
+                tagStream.str( ::std::string() );
+
+                tagStream << ::boost::format(formatString) %
+                          primitive.getPrimitiveId() %
+                          primitive.getVersion() %
+                          tagsIter->getKey().toUtf8() %
+                          tagsIter->getValue().toUtf8();
+
+
+                _writeToFileStream( tableName, tagStream.str(),
+                                    workerFileStreams );
+            }
+        }
+
     }
 }
