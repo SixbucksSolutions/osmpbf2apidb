@@ -152,6 +152,16 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Way&   way,
                     FileStreamMap&                              workerFileStreams
                 );
+
+                void _createRelationTables(
+                    const unsigned int      workerIndex,
+                    FileStreamMap&          workerFileStreams
+                );
+
+                void _writeRelationToTables(
+                    const ::OsmFileParser::OsmPrimitive::Relation&  relation,
+                    FileStreamMap&                                  workerFileStreams
+                );
         };
     }
 }

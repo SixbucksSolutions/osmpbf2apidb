@@ -62,7 +62,7 @@ namespace OsmDataWriter
             // Create table headers if needed
             _createNodeTables(workerIndex, workerFileStreams);
 
-            // Write this node to disk
+            // Write this primitive to disk
             _writeNodeToTables( node, workerFileStreams );
         }
 
@@ -78,15 +78,24 @@ namespace OsmDataWriter
             // Create table headers if needed
             _createWayTables(workerIndex, workerFileStreams);
 
-            // Write this node to disk
+            // Write this primitive to disk
             _writeWayToTables( way, workerFileStreams );
-
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& /*relation*/ )
         {
-            _addWorkerThreadToThreadList();
+            const unsigned int workerIndex =
+                _addWorkerThreadToThreadList();
+
+            FileStreamMap workerFileStreams =
+                _getWorkerFileStreamMap(workerIndex);
+
+            // Create table headers if needed
+            _createRelationTables(workerIndex, workerFileStreams);
+
+            // Write this primitive to disk
+            //_writeWayToTables( way, workerFileStreams );
         }
 
         unsigned int NoTableConstraints::_addWorkerThreadToThreadList()
@@ -541,6 +550,70 @@ namespace OsmDataWriter
                 _writeToFileStream( "way_nodes",
                                     waynodesStream.str(), workerFileStreams );
             }
+        }
+
+        void NoTableConstraints::_createRelationTables(
+            const unsigned int                  workerIndex,
+            NoTableConstraints::FileStreamMap&  workerFileStreams )
+        {
+            if ( workerFileStreams->count(::std::string("current_relations")) == 0 )
+            {
+                //std::cout << "Have to create tables" << std::endl;
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("current_relations"),
+                                      _createTable(
+                                          workerIndex, "current_relations",
+                                          "COPY current_relations (id, "
+                                          "changeset_id, \"timestamp\", "
+                                          "visible, version) FROM stdin;\n")));
+
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("current_relation_tags"),
+                                      _createTable(
+                                          workerIndex, "current_relation_tags",
+                                          "COPY current_relation_tags "
+                                          "(relation_id, k, v) FROM stdin;\n")));
+
+
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("current_relation_members"),
+                                      _createTable(
+                                          workerIndex, "current_relation_members",
+                                          "COPY current_relation_members "
+                                          "(relation_id, member_type, member_id, "
+                                          "member_role, sequence_id) FROM stdin;\n")));
+
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("relations"),
+                                      _createTable(
+                                          workerIndex, "relations",
+                                          "COPY relations (relation_id, changeset_id, "
+                                          "\"timestamp\", version, visible, "
+                                          "redaction_id) FROM stdin;\n")));
+
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("relation_tags"),
+                                      _createTable(
+                                          workerIndex, "relation_tags",
+                                          "COPY relation_tags (relation_id, "
+                                          "version, k, v) FROM stdin;\n")));
+
+
+                workerFileStreams->insert(
+                    ::std::make_pair( std::string("relation_members"),
+                                      _createTable(
+                                          workerIndex, "relation_members",
+                                          "COPY relation_members (relation_id, "
+                                          "member_type, member_id, member_role, "
+                                          "version, sequence_id) FROM stdin;\n" )));
+            }
+        }
+
+        void NoTableConstraints::_writeRelationToTables(
+            const ::OsmFileParser::OsmPrimitive::Relation&  relation,
+            NoTableConstraints::FileStreamMap&              workerFileStreams )
+        {
+            ;
         }
     }
 }
