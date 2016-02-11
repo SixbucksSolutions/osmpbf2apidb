@@ -498,7 +498,49 @@ namespace OsmDataWriter
                                ::std::string("%d\t%d\t%s\t%s\n"),
                                workerFileStreams );
 
+            _writeWayNodesToTables( way, workerFileStreams );
+        }
 
+        void NoTableConstraints::_writeWayNodesToTables(
+            const ::OsmFileParser::OsmPrimitive::Way&   way,
+            NoTableConstraints::FileStreamMap&          workerFileStreams )
+        {
+            const ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs
+            wayNodes = way.getWayNodeRefs();
+
+            ::std::stringstream waynodesStream;
+
+            const ::OsmFileParser::OsmPrimitive::Identifier wayId =
+                way.getPrimitiveId();
+
+            const ::OsmFileParser::OsmPrimitive::Version wayVersion =
+                way.getVersion();
+
+            for ( unsigned int i = 0; i < wayNodes.size(); ++i )
+            {
+                waynodesStream.str( ::std::string() );
+                waynodesStream <<
+                               ::boost::format("%d\t%d\t%d\n")  %
+                               wayId                            %
+                               wayNodes.at(i)                   %
+                               (i + 1);
+
+                _writeToFileStream( "current_way_nodes",
+                                    waynodesStream.str(), workerFileStreams );
+
+
+                waynodesStream.str( ::std::string() );
+
+                waynodesStream <<
+                               ::boost::format("%d\t%d\t%d\t%d\n") %
+                               wayId                               %
+                               wayNodes.at(i)                      %
+                               wayVersion                          %
+                               (i + 1);
+
+                _writeToFileStream( "way_nodes",
+                                    waynodesStream.str(), workerFileStreams );
+            }
         }
     }
 }

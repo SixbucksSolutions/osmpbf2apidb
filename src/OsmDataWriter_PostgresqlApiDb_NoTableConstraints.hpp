@@ -148,6 +148,10 @@ namespace OsmDataWriter
                     FileStreamMap&                              workerFileStreams
                 );
 
+                void _writeWayNodesToTables(
+                    const ::OsmFileParser::OsmPrimitive::Way&   way,
+                    FileStreamMap&                              workerFileStreams
+                );
         };
     }
 }
