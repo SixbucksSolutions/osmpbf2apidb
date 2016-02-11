@@ -138,10 +138,14 @@ namespace OsmDataWriter
                     FileStreamMap&          workerFileStreams
                 );
 
-
                 void _createWayTables(
                     const unsigned int      workerIndex,
                     FileStreamMap&          workerFileStreams
+                );
+
+                void _writeWayToTables(
+                    const ::OsmFileParser::OsmPrimitive::Way&   way,
+                    FileStreamMap&                              workerFileStreams
                 );
 
         };

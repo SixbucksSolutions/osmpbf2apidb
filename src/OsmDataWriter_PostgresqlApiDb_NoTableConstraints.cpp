@@ -79,12 +79,12 @@ namespace OsmDataWriter
             _createWayTables(workerIndex, workerFileStreams);
 
             // Write this node to disk
-            //_writeNodeToTables( node, workerFileStreams );
+            _writeWayToTables( way, workerFileStreams );
 
         }
 
         void NoTableConstraints::visit(
-            const ::OsmFileParser::OsmPrimitive::Relation& relation )
+            const ::OsmFileParser::OsmPrimitive::Relation& /*relation*/ )
         {
             _addWorkerThreadToThreadList();
         }
@@ -456,6 +456,49 @@ namespace OsmDataWriter
                                                     "COPY way_nodes (way_id, node_id, version, sequence_id) "
                                                     "FROM stdin;\n" )));
             }
+
+
+        }
+
+        void NoTableConstraints::_writeWayToTables(
+            const ::OsmFileParser::OsmPrimitive::Way&   way,
+            NoTableConstraints::FileStreamMap&          workerFileStreams )
+        {
+            ::std::stringstream waysStream;
+            waysStream <<
+                       ::boost::format("%d\t%d\t%s\tt\t%d\n") %
+                       way.getPrimitiveId() %
+                       way.getChangesetId() %
+                       _generateISO8601(way.getTimestamp()) %
+                       way.getVersion();
+
+            _writeToFileStream( "current_ways", waysStream.str(),
+                                workerFileStreams );
+
+            waysStream.str( ::std::string() );
+
+            waysStream <<
+                       ::boost::format("%d\t%d\t%s\t%d\tt\\N\n")   %
+                       way.getPrimitiveId()                        %
+                       way.getChangesetId()                        %
+                       way.getVersion()                            %
+                       _generateISO8601(way.getTimestamp());
+
+            _writeToFileStream( "ways", waysStream.str(),
+                                workerFileStreams );
+
+            _writeTagsToTable( way,
+                               ::std::string("current_way_tags"),
+                               ::std::string("%d\t%s\t%s\n"),
+                               workerFileStreams );
+
+            _writeTagsToTable( way,
+                               way.getVersion(),
+                               ::std::string("way_tags"),
+                               ::std::string("%d\t%d\t%s\t%s\n"),
+                               workerFileStreams );
+
+
         }
     }
 }
