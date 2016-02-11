@@ -613,7 +613,39 @@ namespace OsmDataWriter
             const ::OsmFileParser::OsmPrimitive::Relation&  relation,
             NoTableConstraints::FileStreamMap&              workerFileStreams )
         {
-            ;
+            // Write relations
+            ::std::stringstream relationsStream;
+            relationsStream <<
+                            ::boost::format("%d\t%d\t%s\tt\t%d\n") %
+                            relation.getPrimitiveId() %
+                            relation.getChangesetId() %
+                            _generateISO8601(relation.getTimestamp()) %
+                            relation.getVersion();
+
+            _writeToFileStream( "current_relations", relationsStream.str(),
+                                workerFileStreams );
+
+            relationsStream.str( ::std::string() );
+
+            relationsStream <<
+                            ::boost::format("%d\t%d\t%d\t%s\tt\\N\n")   %
+                            relation.getPrimitiveId()                        %
+                            relation.getChangesetId()                        %
+                            relation.getVersion()                            %
+                            _generateISO8601(relation.getTimestamp());
+
+            _writeTagsToTable( relation,
+                               ::std::string("current_relation_tags"),
+                               ::std::string("%d\t%s\t%s\n"),
+                               workerFileStreams );
+
+            _writeTagsToTable( relation,
+                               relation.getVersion(),
+                               ::std::string("relation_tags"),
+                               ::std::string("%d\t%d\t%s\t%s\n"),
+                               workerFileStreams );
+
+            // Write relation members
         }
     }
 }
