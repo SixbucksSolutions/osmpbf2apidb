@@ -139,6 +139,11 @@ namespace OsmDataWriter
                 );
 
 
+                void _createWayTables(
+                    const unsigned int      workerIndex,
+                    FileStreamMap&          workerFileStreams
+                );
+
         };
     }
 }
