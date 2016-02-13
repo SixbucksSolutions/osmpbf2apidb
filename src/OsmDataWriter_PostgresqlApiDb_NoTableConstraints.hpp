@@ -4,9 +4,10 @@
 #include <cstdint>
 #include <mutex>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 #include <memory>
 #include <boost/filesystem.hpp>
 #include "OsmFileParser/include/Primitive.hpp"
@@ -14,6 +15,7 @@
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Way.hpp"
 #include "WorkerThreadList.hpp"
+#include "WorkerThreadContext.hpp"
 
 namespace OsmDataWriter
 {
@@ -65,13 +67,10 @@ namespace OsmDataWriter
                 ::boost::filesystem::path       m_outputDir;
                 WorkerThreadList                m_workerThreadList;
                 ::std::vector<::std::string>    m_fileSectionList;
-                ::std::mutex                    m_workerFileStreamMapsMutex;
+                ::std::mutex                    m_workerThreadContextsMutex;
 
-                typedef ::std::shared_ptr <
-                ::std::map <::std::string,
-                ::std::shared_ptr<::std::ostream >>> FileStreamMap;
-
-                ::std::map<unsigned int, FileStreamMap> m_workerFileStreamMaps;
+                ::std::map <int, WorkerThreadContext>
+                m_workerThreadContexts;
 
                 void _createSectionNameList();
 
@@ -81,8 +80,13 @@ namespace OsmDataWriter
                     const unsigned int  workerThreadIndex
                 );
 
-                FileStreamMap _getWorkerFileStreamMap(
+                WorkerThreadContext _getWorkerContext(
                     const unsigned int workerIndex
+                );
+
+                void _updateWorkerContext(
+                    const unsigned int      workerIndex,
+                    WorkerThreadContext&    workerContext
                 );
 
                 ::std::shared_ptr<::std::ostream> _createTable(
@@ -94,20 +98,20 @@ namespace OsmDataWriter
                 void _writeToFileStream(
                     const ::std::string&    fileStreamName,
                     const ::std::string&    writeData,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&    workerThreadContext
                 )
                 {
-                    *(workerFileStreams->at(fileStreamName)) << writeData;
+                    //*(workerFileStreams->at(fileStreamName)) << writeData;
                 }
 
                 void _createNodeTables(
                     const unsigned int      workerIndex,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&    workerThreadContext
                 );
 
                 void _writeNodeToTables(
                     const ::OsmFileParser::OsmPrimitive::Node&  node,
-                    FileStreamMap&                              workerFileStreams
+                    const unsigned int                          workerContextIndex
                 );
 
                 unsigned int _lonLatToTileNumber(
@@ -123,7 +127,7 @@ namespace OsmDataWriter
                     primitive,
                     const ::std::string&    tableName,
                     const ::std::string&    formatString,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&    workerThreadContext
                 );
 
                 void _writeTagsToTable(
@@ -135,32 +139,32 @@ namespace OsmDataWriter
 
                     const ::std::string&    tableName,
                     const ::std::string&    formatString,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&    workerThreadContext
                 );
 
                 void _createWayTables(
                     const unsigned int      workerIndex,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&    workerThreadContext
                 );
 
                 void _writeWayToTables(
                     const ::OsmFileParser::OsmPrimitive::Way&   way,
-                    FileStreamMap&                              workerFileStreams
+                    WorkerThreadContext&                        workerThreadContext
                 );
 
                 void _writeWayNodesToTables(
                     const ::OsmFileParser::OsmPrimitive::Way&   way,
-                    FileStreamMap&                              workerFileStreams
+                    WorkerThreadContext&                        workerThreadContext
                 );
 
                 void _createRelationTables(
                     const unsigned int      workerIndex,
-                    FileStreamMap&          workerFileStreams
+                    WorkerThreadContext&                        workerThreadContext
                 );
 
                 void _writeRelationToTables(
                     const ::OsmFileParser::OsmPrimitive::Relation&  relation,
-                    FileStreamMap&                                  workerFileStreams
+                    WorkerThreadContext&                            workerThreadContext
                 );
         };
     }
