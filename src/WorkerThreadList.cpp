@@ -15,15 +15,13 @@ bool WorkerThreadList::contains(
 {
     //::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
 
-    return ( m_workerThreads.find(thread) !=
-             m_workerThreads.end() );
+    return ( m_workerThreads.count(thread) == 1 );
 }
 
 void WorkerThreadList::add(
     const ::std::thread::id&    thread )
 {
     ::std::lock_guard<::std::mutex> threadMutex(m_workerThreadsMutex);
-
     m_workerThreads.insert(
         ::std::make_pair(thread, m_workerThreads.size() + 1) );
 }

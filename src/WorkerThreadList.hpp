@@ -3,7 +3,7 @@
 
 #include <thread>
 #include <mutex>
-#include <map>
+#include <unordered_map>
 
 class WorkerThreadList
 {
@@ -41,8 +41,8 @@ class WorkerThreadList
         );
 
     protected:
-        ::std::mutex                                m_workerThreadsMutex;
-        ::std::map<::std::thread::id, unsigned int> m_workerThreads;
+        ::std::mutex                                            m_workerThreadsMutex;
+        ::std::unordered_map<::std::thread::id, unsigned int>   m_workerThreads;
 
 
 };
