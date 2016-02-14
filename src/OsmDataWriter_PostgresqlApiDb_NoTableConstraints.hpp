@@ -122,24 +122,16 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Timestamp&     timestamp
                 ) const;
 
-                void _writeTagsToTable(
-                    const ::OsmFileParser::OsmPrimitive::Primitive&
-                    primitive,
-                    const ::std::string&    tableName,
-                    const ::std::string&    formatString,
-                    WorkerThreadContext&    workerThreadContext
+                void _writeCurrentTags(
+                    const ::OsmFileParser::OsmPrimitive::Primitive&     primitive,
+                    ::std::shared_ptr<::std::ostream>                   stream
                 );
 
-                void _writeTagsToTable(
-                    const ::OsmFileParser::OsmPrimitive::Primitive&
-                    primitive,
-
-                    const ::OsmFileParser::OsmPrimitive::Version
-                    primitiveVersion,
-
-                    const ::std::string&    tableName,
-                    const ::std::string&    formatString,
-                    WorkerThreadContext&    workerThreadContext
+                void _writeTags(
+                    const ::OsmFileParser::OsmPrimitive::Primitive&     primitive,
+                    ::std::shared_ptr<WorkerThreadContext>&             workerContext,
+                    const ::std::string&                                currentTagsTableName,
+                    const ::std::string&                                tagsTableName
                 );
 
                 void _createWayTables(

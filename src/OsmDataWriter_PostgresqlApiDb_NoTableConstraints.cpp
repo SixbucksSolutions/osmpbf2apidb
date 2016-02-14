@@ -265,55 +265,36 @@ namespace OsmDataWriter
                 _createNodeTables(workerContextIndex, workerContext );
             }
 
-            /*
             const ::OsmFileParser::LonLatCoordinate lonLat =
                 node.getLonLat();
             ::std::int_fast32_t lon;
             ::std::int_fast32_t lat;
             lonLat.getLonLat(lon, lat);
 
-            ::std::stringstream nodesStream;
-            nodesStream <<
-                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t%d\n") %
-                        node.getPrimitiveId() %
-                        lat %
-                        lon %
-                        node.getChangesetId() %
-                        _generateISO8601(node.getTimestamp()) %
-                        _lonLatToTileNumber(lonLat) %
-                        node.getVersion();
 
-            _writeToFileStream( "current_nodes", nodesStream.str(),
-                                workerFileStreams );
+            *(workerContext->getTable("current_nodes")) <<
+                    node.getPrimitiveId()       << "\t"     <<
+                    lat                         << "\t"     <<
+                    lon                         << "\t"     <<
+                    node.getChangesetId()       << "\tt\t"  << // has visible tag
+                    _generateISO8601(
+                        node.getTimestamp())    << "\t"     <<
+                    _lonLatToTileNumber(lonLat) << "\t"     <<
+                    node.getVersion()           <<
+                    ::std::endl;
 
-            // Set contents of stream back to empty string
-            nodesStream.str( ::std::string() );
+            *(workerContext->getTable("nodes"))         <<
+                    node.getPrimitiveId()       << "\t"     <<
+                    lat                         << "\t"     <<
+                    lon                         << "\t"     <<
+                    node.getChangesetId()       << "\tt\t"  << // has visible tag
+                    _generateISO8601(
+                        node.getTimestamp())    << "\t"     <<
+                    _lonLatToTileNumber(lonLat) << "\t"     <<
+                    node.getVersion()           << "\t\\N"  <<
+                    ::std::endl;
 
-            nodesStream <<
-                        ::boost::format("%d\t%d\t%d\t%d\tt\t%s\t%d\t%d\t\\N\n") %
-                        node.getPrimitiveId() %
-                        lat %
-                        lon %
-                        node.getChangesetId() %
-                        _generateISO8601(node.getTimestamp()) %
-                        _lonLatToTileNumber(lonLat) %
-                        node.getVersion();
-
-            _writeToFileStream( "nodes", nodesStream.str(),
-                                workerFileStreams );
-
-
-            _writeTagsToTable( node,
-                               ::std::string("current_node_tags"),
-                               ::std::string("%d\t%s\t%s\n"),
-                               workerFileStreams );
-
-            _writeTagsToTable( node,
-                               node.getVersion(),
-                               ::std::string("node_tags"),
-                               ::std::string("%d\t%d\t%s\t%s\n"),
-                               workerFileStreams );
-            */
+			_writeTags( node, workerContext, "current_node_tags", "node_tags" );
         }
 
         ::std::string NoTableConstraints::_generateISO8601(
@@ -355,68 +336,45 @@ namespace OsmDataWriter
             return tile;
         }
 
-        void NoTableConstraints::_writeTagsToTable(
-            const ::OsmFileParser::OsmPrimitive::Primitive&
-            primitive,
-            const ::std::string&                tableName,
-            const ::std::string&                formatString,
-            WorkerThreadContext&    workerContext )
+        void NoTableConstraints::_writeTags(
+            const ::OsmFileParser::OsmPrimitive::Primitive&     primitive,
+            ::std::shared_ptr<WorkerThreadContext>&				workerContext,
+			const ::std::string&								currentTagsName,
+			const ::std::string&								tagsName )
         {
-            /*
-            ::std::stringstream tagStream;
-
             const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
                 primitive.getTags();
+
+			::std::shared_ptr<::std::ostream> currentTagsStream = 
+				workerContext->getTable( currentTagsName );
+
+			::std::shared_ptr<::std::ostream> tagsStream =
+				workerContext->getTable( tagsName );
+
+			const ::OsmFileParser::OsmPrimitive::Identifier id =
+				primitive.getPrimitiveId();
+
+			const ::OsmFileParser::OsmPrimitive::Version version =
+				primitive.getVersion();
 
             for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
                     tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
             {
-                tagStream.str( ::std::string() );
+				const ::std::string tagKey 		= tagsIter->getKey().toUtf8();
+				const ::std::string tagValue	= tagsIter->getValue().toUtf8();
+                *currentTagsStream <<
+                        id				<< "\t" <<
+                        tagKey 			<< "\t" <<
+                        tagValue 		<< 
+						::std::endl;
 
-                tagStream << ::boost::format(formatString) %
-                          primitive.getPrimitiveId() %
-                          tagsIter->getKey().toUtf8() %
-                          tagsIter->getValue().toUtf8();
-
-                _writeToFileStream( tableName, tagStream.str(),
-                                    workerFileStreams );
+                *tagsStream <<
+                        id				<< "\t" <<
+						version			<< "\t" <<
+						tagKey			<< "\t" <<
+						tagValue		<<
+						::std::endl;
             }
-            */
-        }
-
-        void NoTableConstraints::_writeTagsToTable(
-            const ::OsmFileParser::OsmPrimitive::Primitive&
-            primitive,
-
-            const ::OsmFileParser::OsmPrimitive::Version
-            primitiveVersion,
-
-            const ::std::string&                tableName,
-            const ::std::string&                formatString,
-            WorkerThreadContext&    workerContext )
-        {
-            /*
-            ::std::stringstream tagStream;
-
-            const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
-                primitive.getTags();
-
-            for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
-                    tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
-            {
-                tagStream.str( ::std::string() );
-
-                tagStream << ::boost::format(formatString)  %
-                          primitive.getPrimitiveId()        %
-                          primitiveVersion                  %
-                          tagsIter->getKey().toUtf8()       %
-                          tagsIter->getValue().toUtf8();
-
-
-                _writeToFileStream( tableName, tagStream.str(),
-                                    workerFileStreams );
-            }
-            */
         }
 
         void NoTableConstraints::_createWayTables(
