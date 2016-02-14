@@ -14,8 +14,7 @@ namespace OsmDataWriter
             m_nodeTablesCreated(false),
             m_wayTablesCreated(false),
             m_relationTablesCreated(false),
-            m_fileStreams(new ::std::unordered_map <::std::string,
-                          ::std::shared_ptr<::std::ostream >> )
+            m_fileStreams()
         {
             ;
         }
@@ -24,7 +23,7 @@ namespace OsmDataWriter
             const ::std::string&                tableName,
             ::std::shared_ptr<::std::ostream>   fileStream )
         {
-            m_fileStreams->insert( ::std::make_pair(tableName, fileStream) );
+            m_fileStreams.insert( ::std::make_pair(tableName, fileStream) );
         }
     }
 }

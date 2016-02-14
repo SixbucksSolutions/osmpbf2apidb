@@ -41,15 +41,14 @@ namespace OsmDataWriter
                     const ::std::string&    tableName
                 ) const
                 {
-                    return m_fileStreams->at(tableName);
+                    return m_fileStreams.at(tableName);
                 }
 
 
             protected:
 
-                typedef ::std::shared_ptr <
-                ::std::unordered_map <::std::string,
-                ::std::shared_ptr<::std::ostream >>> FileStreamMap;
+                typedef ::std::unordered_map <::std::string,
+                        ::std::shared_ptr<::std::ostream >> FileStreamMap;
 
                 bool            m_nodeTablesCreated;
                 bool            m_wayTablesCreated;

@@ -105,8 +105,8 @@ namespace OsmDataWriter
                 }
 
                 void _createNodeTables(
-                    const unsigned int      workerIndex,
-                    WorkerThreadContext&    workerThreadContext
+                    const unsigned int                      workerIndex,
+                    ::std::shared_ptr<WorkerThreadContext>& workerThreadContext
                 );
 
                 void _writeNodeToTables(

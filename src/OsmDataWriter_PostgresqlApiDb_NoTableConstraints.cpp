@@ -32,8 +32,8 @@ namespace OsmDataWriter
             m_outputDir(sqlDirectory),
             m_workerThreadList(),
             m_fileSectionList(),
-			m_workerThreadContextsMutex(),
-			m_workerThreadContexts()
+            m_workerThreadContextsMutex(),
+            m_workerThreadContexts()
         {
             if ( ::boost::filesystem::is_directory(m_outputDir) ==
                     false )
@@ -64,7 +64,7 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
-			/*
+            /*
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -76,13 +76,13 @@ namespace OsmDataWriter
 
             // Write this primitive to disk
             _writeWayToTables( way, workerFileStreams );
-			*/
+            */
         }
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& /*relation*/ )
         {
-			/*
+            /*
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -94,12 +94,12 @@ namespace OsmDataWriter
 
             // Write this primitive to disk
             //_writeWayToTables( way, workerFileStreams );
-			*/
+            */
         }
 
         unsigned int NoTableConstraints::_addWorkerThreadToThreadList()
         {
-			unsigned int workerThreadIndex;
+            unsigned int workerThreadIndex;
 
             if ( m_workerThreadList.contains() == false )
             {
@@ -112,21 +112,21 @@ namespace OsmDataWriter
                     ::std::this_thread::get_id() << std::endl;
                 */
 
-				::std::lock_guard<::std::mutex> lockGuard(
-					m_workerThreadContextsMutex);
+                ::std::lock_guard<::std::mutex> lockGuard(
+                    m_workerThreadContextsMutex);
 
-				workerThreadIndex = m_workerThreadList.getIndex();
-				::std::shared_ptr<WorkerThreadContext> workerContext(
-					new WorkerThreadContext() );
+                workerThreadIndex = m_workerThreadList.getIndex();
+                ::std::shared_ptr<WorkerThreadContext> workerContext(
+                    new WorkerThreadContext() );
 
-				m_workerThreadContexts.insert(
-					::std::make_pair(workerThreadIndex,
-					workerContext) );
+                m_workerThreadContexts.insert(
+                    ::std::make_pair(workerThreadIndex,
+                                     workerContext) );
             }
-			else
-			{
-				workerThreadIndex = m_workerThreadList.getIndex();
-			}
+            else
+            {
+                workerThreadIndex = m_workerThreadList.getIndex();
+            }
 
             return m_workerThreadList.getIndex();
         }
@@ -155,55 +155,52 @@ namespace OsmDataWriter
             m_fileSectionList.push_back("relation_tags");
         }
 
-
-
         void NoTableConstraints::_createNodeTables(
-            const unsigned int   	workerIndex,
-            WorkerThreadContext&	workerContext )
+            const unsigned int                      workerIndex,
+            ::std::shared_ptr<WorkerThreadContext>& workerContext )
         {
-			/*
-            if ( workerFiles->count(::std::string("current_nodes")) == 0 )
-            {
-                //std::cout << "Have to create tables" << std::endl;
-                workerFiles->insert(
-                    ::std::make_pair( std::string("current_nodes"),
-                                      _createTable(
-                                          workerIndex,
-                                          "current_nodes",
-                                          "COPY current_nodes (id, latitude, longitude, "
-                                          "changeset_id, visible, \"timestamp\", tile, "
-                                          "version) FROM stdin;")) );
+            //std::cout << "Have to create tables" << std::endl;
+            workerContext->newTable(
+                "current_nodes",
+                _createTable(
+                    workerIndex,
+                    "current_nodes",
+                    "COPY current_nodes (id, latitude, longitude, "
+                    "changeset_id, visible, \"timestamp\", tile, "
+                    "version) FROM stdin;") );
 
 
-                workerFiles->insert(
+
+            /*
+
+            workerFiles->insert(
                     ::std::make_pair( ::std::string("current_node_tags"),
-                                      _createTable(
-                                          workerIndex,
-                                          "current_node_tags",
-                                          "COPY current_node_tags (node_id, k, v) "
-                                          "FROM stdin;")) );
+                        _createTable(
+                            workerIndex,
+                            "current_node_tags",
+                            "COPY current_node_tags (node_id, k, v) "
+                            "FROM stdin;")) );
 
 
-                workerFiles->insert(
+            workerFiles->insert(
                     ::std::make_pair( ::std::string("nodes" ),
-                                      _createTable(
-                                          workerIndex,
-                                          "nodes",
-                                          "COPY nodes (node_id, latitude, longitude, "
-                                          "changeset_id, visible, \"timestamp\", tile, "
-                                          "version, redaction_id) FROM stdin;")) );
+                        _createTable(
+                            workerIndex,
+                            "nodes",
+                            "COPY nodes (node_id, latitude, longitude, "
+                            "changeset_id, visible, \"timestamp\", tile, "
+                            "version, redaction_id) FROM stdin;")) );
 
-                workerFiles->insert(
+            workerFiles->insert(
                     ::std::make_pair( ::std::string("node_tags"),
-                                      _createTable(
-                                          workerIndex,
-                                          "node_tags",
-                                          "COPY node_tags (node_id, version, k, v) "
-                                          "FROM stdin;\n")) );
-            }
+                        _createTable(
+                            workerIndex,
+                            "node_tags",
+                            "COPY node_tags (node_id, version, k, v) "
+                            "FROM stdin;\n")) );
+            */
 
             //std::cout << "Leaving _createNodeTables" << std::endl;
-			*/
         }
 
         ::std::shared_ptr<::std::ostream> NoTableConstraints::_createTable(
@@ -258,18 +255,18 @@ namespace OsmDataWriter
 
         void NoTableConstraints::_writeNodeToTables(
             const ::OsmFileParser::OsmPrimitive::Node&  node,
-			const unsigned int							workerContextIndex )
+            const unsigned int                          workerContextIndex )
         {
-			::std::shared_ptr<WorkerThreadContext> workerContext = 
-				_getWorkerContext(workerContextIndex);
+            ::std::shared_ptr<WorkerThreadContext> workerContext =
+                _getWorkerContext(workerContextIndex);
 
-			// Do we need to create tables?
-			if ( workerContext->nodeTablesCreated() == false )
-			{
-				// Create node tables
-			}
+            // Do we need to create tables?
+            if ( workerContext->nodeTablesCreated() == false )
+            {
+                _createNodeTables(workerContextIndex, workerContext );
+            }
 
-			/*
+            /*
             const ::OsmFileParser::LonLatCoordinate lonLat =
                 node.getLonLat();
             ::std::int_fast32_t lon;
@@ -317,7 +314,7 @@ namespace OsmDataWriter
                                ::std::string("node_tags"),
                                ::std::string("%d\t%d\t%s\t%s\n"),
                                workerFileStreams );
-			*/
+            */
         }
 
         ::std::string NoTableConstraints::_generateISO8601(
@@ -364,9 +361,9 @@ namespace OsmDataWriter
             primitive,
             const ::std::string&                tableName,
             const ::std::string&                formatString,
-            WorkerThreadContext&	workerContext )
+            WorkerThreadContext&    workerContext )
         {
-			/*
+            /*
             ::std::stringstream tagStream;
 
             const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
@@ -385,7 +382,7 @@ namespace OsmDataWriter
                 _writeToFileStream( tableName, tagStream.str(),
                                     workerFileStreams );
             }
-			*/
+            */
         }
 
         void NoTableConstraints::_writeTagsToTable(
@@ -397,9 +394,9 @@ namespace OsmDataWriter
 
             const ::std::string&                tableName,
             const ::std::string&                formatString,
-			WorkerThreadContext&	workerContext )
+            WorkerThreadContext&    workerContext )
         {
-			/*
+            /*
             ::std::stringstream tagStream;
 
             const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
@@ -420,14 +417,14 @@ namespace OsmDataWriter
                 _writeToFileStream( tableName, tagStream.str(),
                                     workerFileStreams );
             }
-			*/
+            */
         }
 
         void NoTableConstraints::_createWayTables(
             const unsigned int                  workerIndex,
-            WorkerThreadContext&	workerContext )
+            WorkerThreadContext&    workerContext )
         {
-			/*
+            /*
             if ( workerFileStreams->count(::std::string("current_ways")) == 0 )
             {
                 //std::cout << "Have to create tables" << std::endl;
@@ -476,14 +473,14 @@ namespace OsmDataWriter
             }
 
 
-			*/
+            */
         }
 
         void NoTableConstraints::_writeWayToTables(
             const ::OsmFileParser::OsmPrimitive::Way&   way,
-			WorkerThreadContext&						workerContext )
+            WorkerThreadContext&                        workerContext )
         {
-			/*
+            /*
             ::std::stringstream waysStream;
             waysStream <<
                        ::boost::format("%d\t%d\t%s\tt\t%d\n") %
@@ -519,14 +516,14 @@ namespace OsmDataWriter
                                workerFileStreams );
 
             _writeWayNodesToTables( way, workerFileStreams );
-			*/
+            */
         }
 
         void NoTableConstraints::_writeWayNodesToTables(
             const ::OsmFileParser::OsmPrimitive::Way&   way,
-            WorkerThreadContext&						workerContext )
+            WorkerThreadContext&                        workerContext )
         {
-			/*
+            /*
             const ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs
             wayNodes = way.getWayNodeRefs();
 
@@ -563,14 +560,14 @@ namespace OsmDataWriter
                 _writeToFileStream( "way_nodes",
                                     waynodesStream.str(), workerFileStreams );
             }
-			*/
+            */
         }
 
         void NoTableConstraints::_createRelationTables(
             const unsigned int                  workerIndex,
-			WorkerThreadContext&	workerContext )
+            WorkerThreadContext&    workerContext )
         {
-			/*
+            /*
             if ( workerFileStreams->count(::std::string("current_relations")) == 0 )
             {
                 //std::cout << "Have to create tables" << std::endl;
@@ -622,14 +619,14 @@ namespace OsmDataWriter
                                           "member_type, member_id, member_role, "
                                           "version, sequence_id) FROM stdin;\n" )));
             }
-			*/
+            */
         }
 
         void NoTableConstraints::_writeRelationToTables(
             const ::OsmFileParser::OsmPrimitive::Relation&  relation,
-			WorkerThreadContext&							workerContext )
+            WorkerThreadContext&                            workerContext )
         {
-			/*
+            /*
             // Write relations
             ::std::stringstream relationsStream;
             relationsStream <<
@@ -663,15 +660,15 @@ namespace OsmDataWriter
                                workerFileStreams );
 
             // Write relation members
-			*/
+            */
         }
 
-		std::shared_ptr<WorkerThreadContext> NoTableConstraints::_getWorkerContext(
-			const unsigned int 	workerThreadIndex )
-		{
-			::std::lock_guard<::std::mutex> lockGuard(m_workerThreadContextsMutex);
+        std::shared_ptr<WorkerThreadContext> NoTableConstraints::_getWorkerContext(
+            const unsigned int  workerThreadIndex )
+        {
+            ::std::lock_guard<::std::mutex> lockGuard(m_workerThreadContextsMutex);
 
-			return m_workerThreadContexts.at(workerThreadIndex);
-		}
+            return m_workerThreadContexts.at(workerThreadIndex);
+        }
     }
 }
