@@ -294,7 +294,7 @@ namespace OsmDataWriter
                     node.getVersion()           << "\t\\N"  <<
                     ::std::endl;
 
-			_writeTags( node, workerContext, "current_node_tags", "node_tags" );
+            _writeTags( node, workerContext, "current_node_tags", "node_tags" );
         }
 
         ::std::string NoTableConstraints::_generateISO8601(
@@ -338,42 +338,42 @@ namespace OsmDataWriter
 
         void NoTableConstraints::_writeTags(
             const ::OsmFileParser::OsmPrimitive::Primitive&     primitive,
-            ::std::shared_ptr<WorkerThreadContext>&				workerContext,
-			const ::std::string&								currentTagsName,
-			const ::std::string&								tagsName )
+            ::std::shared_ptr<WorkerThreadContext>&             workerContext,
+            const ::std::string&                                currentTagsName,
+            const ::std::string&                                tagsName )
         {
             const ::OsmFileParser::OsmPrimitive::PrimitiveTags tags =
                 primitive.getTags();
 
-			::std::shared_ptr<::std::ostream> currentTagsStream = 
-				workerContext->getTable( currentTagsName );
+            ::std::shared_ptr<::std::ostream> currentTagsStream =
+                workerContext->getTable( currentTagsName );
 
-			::std::shared_ptr<::std::ostream> tagsStream =
-				workerContext->getTable( tagsName );
+            ::std::shared_ptr<::std::ostream> tagsStream =
+                workerContext->getTable( tagsName );
 
-			const ::OsmFileParser::OsmPrimitive::Identifier id =
-				primitive.getPrimitiveId();
+            const ::OsmFileParser::OsmPrimitive::Identifier id =
+                primitive.getPrimitiveId();
 
-			const ::OsmFileParser::OsmPrimitive::Version version =
-				primitive.getVersion();
+            const ::OsmFileParser::OsmPrimitive::Version version =
+                primitive.getVersion();
 
             for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
                     tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
             {
-				const ::std::string tagKey 		= tagsIter->getKey().toUtf8();
-				const ::std::string tagValue	= tagsIter->getValue().toUtf8();
+                const ::std::string tagKey      = tagsIter->getKey().toUtf8();
+                const ::std::string tagValue    = tagsIter->getValue().toUtf8();
                 *currentTagsStream <<
-                        id				<< "\t" <<
-                        tagKey 			<< "\t" <<
-                        tagValue 		<< 
-						::std::endl;
+                                   id              << "\t" <<
+                                   tagKey          << "\t" <<
+                                   tagValue        <<
+                                   ::std::endl;
 
                 *tagsStream <<
-                        id				<< "\t" <<
-						version			<< "\t" <<
-						tagKey			<< "\t" <<
-						tagValue		<<
-						::std::endl;
+                            id              << "\t" <<
+                            version         << "\t" <<
+                            tagKey          << "\t" <<
+                            tagValue        <<
+                            ::std::endl;
             }
         }
 
