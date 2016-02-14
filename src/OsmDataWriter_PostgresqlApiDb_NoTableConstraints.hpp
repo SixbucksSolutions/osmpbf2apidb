@@ -69,8 +69,7 @@ namespace OsmDataWriter
                 ::std::vector<::std::string>    m_fileSectionList;
                 ::std::mutex                    m_workerThreadContextsMutex;
 
-                ::std::map <int, WorkerThreadContext>
-                m_workerThreadContexts;
+                ::std::map<int, WorkerThreadContext> m_workerThreadContexts;
 
                 void _createSectionNameList();
 
