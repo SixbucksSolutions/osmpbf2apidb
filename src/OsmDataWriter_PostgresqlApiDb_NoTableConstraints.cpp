@@ -171,34 +171,31 @@ namespace OsmDataWriter
 
 
 
-            /*
+            workerContext->newTable(
+                "current_node_tags",
+                _createTable(
+                    workerIndex,
+                    "current_node_tags",
+                    "COPY current_node_tags (node_id, k, v) "
+                    "FROM stdin;") );
 
-            workerFiles->insert(
-                    ::std::make_pair( ::std::string("current_node_tags"),
-                        _createTable(
-                            workerIndex,
-                            "current_node_tags",
-                            "COPY current_node_tags (node_id, k, v) "
-                            "FROM stdin;")) );
+            workerContext->newTable(
+                "nodes",
+                _createTable(
+                    workerIndex,
+                    "nodes",
+                    "COPY nodes (node_id, latitude, longitude, "
+                    "changeset_id, visible, \"timestamp\", tile, "
+                    "version, redaction_id) FROM stdin;") );
 
 
-            workerFiles->insert(
-                    ::std::make_pair( ::std::string("nodes" ),
-                        _createTable(
-                            workerIndex,
-                            "nodes",
-                            "COPY nodes (node_id, latitude, longitude, "
-                            "changeset_id, visible, \"timestamp\", tile, "
-                            "version, redaction_id) FROM stdin;")) );
-
-            workerFiles->insert(
-                    ::std::make_pair( ::std::string("node_tags"),
-                        _createTable(
-                            workerIndex,
-                            "node_tags",
-                            "COPY node_tags (node_id, version, k, v) "
-                            "FROM stdin;\n")) );
-            */
+            workerContext->newTable(
+                "node_tags",
+                _createTable(
+                    workerIndex,
+                    "node_tags",
+                    "COPY node_tags (node_id, version, k, v) "
+                    "FROM stdin;\n") );
 
             //std::cout << "Leaving _createNodeTables" << std::endl;
 
