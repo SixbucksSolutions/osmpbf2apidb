@@ -201,6 +201,8 @@ namespace OsmDataWriter
             */
 
             //std::cout << "Leaving _createNodeTables" << std::endl;
+
+            workerContext->nodeTablesCreated(true);
         }
 
         ::std::shared_ptr<::std::ostream> NoTableConstraints::_createTable(
