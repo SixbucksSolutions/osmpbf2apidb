@@ -23,9 +23,9 @@ COMPILE.cpp = $(CXX) $(DEPFLAGS) $(CXXFLAGS) -c
 POSTCOMPILE = mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d
 
 all :
-	cd lib/OsmFileParser ; make
-	make astyle
-	make $(BINDIR)/osmpbf2apidb
+	$(MAKE) -C lib/OsmFileParser 
+	$(MAKE) astyle
+	$(MAKE) $(BINDIR)/osmpbf2apidb
 
 $(BINDIR)/osmpbf2apidb : $(OBJS) $(OSMFILEPARSER_LIB) | $(BINDIR)
 	$(LD) $(LDFLAGS) -o $@ $^ $(LD_LIBS)
@@ -48,7 +48,7 @@ $(BINDIR) :
 	mkdir -p $(BINDIR)
 
 clean :
-	cd lib/OsmFileParser; make clean
+	$(MAKE) -C lib/OsmFileParser clean
 	rm -f $(OBJS) $(BINDIR)/osmpbf2apidb
 
 $(DEPDIR)/%.d: ;
