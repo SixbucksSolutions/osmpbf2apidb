@@ -461,11 +461,8 @@ namespace OsmDataWriter
             const ::OsmFileParser::OsmPrimitive::Way&   way,
             ::std::shared_ptr<WorkerThreadContext>&     workerContext )
         {
-            /*
             const ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs
             wayNodes = way.getWayNodeRefs();
-
-            ::std::stringstream waynodesStream;
 
             const ::OsmFileParser::OsmPrimitive::Identifier wayId =
                 way.getPrimitiveId();
@@ -473,32 +470,30 @@ namespace OsmDataWriter
             const ::OsmFileParser::OsmPrimitive::Version wayVersion =
                 way.getVersion();
 
+            ::std::shared_ptr<::std::ostream> currentWayNodesStream =
+                workerContext->getTable("current_way_nodes");
+
+            ::std::shared_ptr<::std::ostream> wayNodesStream =
+                workerContext->getTable("way_nodes");
+
             for ( unsigned int i = 0; i < wayNodes.size(); ++i )
             {
-                waynodesStream.str( ::std::string() );
-                waynodesStream <<
-                               ::boost::format("%d\t%d\t%d\n")  %
-                               wayId                            %
-                               wayNodes.at(i)                   %
-                               (i + 1);
+                const ::OsmFileParser::OsmPrimitive::Identifier
+                currWayNodeId = wayNodes.at(i);
 
-                _writeToFileStream( "current_way_nodes",
-                                    waynodesStream.str(), workerFileStreams );
+                *currentWayNodesStream  <<
+                                        wayId               << "\t" <<
+                                        currWayNodeId       << "\t" <<
+                                        (i + 1)             <<
+                                        ::std::endl;
 
-
-                waynodesStream.str( ::std::string() );
-
-                waynodesStream <<
-                               ::boost::format("%d\t%d\t%d\t%d\n") %
-                               wayId                               %
-                               wayNodes.at(i)                      %
-                               wayVersion                          %
-                               (i + 1);
-
-                _writeToFileStream( "way_nodes",
-                                    waynodesStream.str(), workerFileStreams );
+                *wayNodesStream         <<
+                                        wayId               << "\t" <<
+                                        currWayNodeId       << "\t" <<
+                                        wayVersion          << "\t" <<
+                                        (i + 1)             <<
+                                        ::std::endl;
             }
-            */
         }
 
         void NoTableConstraints::_createRelationTables(
