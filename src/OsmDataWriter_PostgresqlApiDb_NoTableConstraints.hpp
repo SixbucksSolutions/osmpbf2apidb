@@ -135,13 +135,13 @@ namespace OsmDataWriter
                 );
 
                 void _createWayTables(
-                    const unsigned int      workerIndex,
-                    WorkerThreadContext&    workerThreadContext
+                    const unsigned int                          workerIndex,
+                    ::std::shared_ptr<WorkerThreadContext>&     workerThreadContext
                 );
 
                 void _writeWayToTables(
                     const ::OsmFileParser::OsmPrimitive::Way&   way,
-                    WorkerThreadContext&                        workerThreadContext
+                    const unsigned int                          workerThreadIndex
                 );
 
                 void _writeWayNodesToTables(
@@ -151,7 +151,7 @@ namespace OsmDataWriter
 
                 void _createRelationTables(
                     const unsigned int      workerIndex,
-                    WorkerThreadContext&                        workerThreadContext
+                    WorkerThreadContext&    workerThreadContext
                 );
 
                 void _writeRelationToTables(

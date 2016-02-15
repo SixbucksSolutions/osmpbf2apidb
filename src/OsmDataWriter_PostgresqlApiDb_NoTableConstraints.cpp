@@ -64,19 +64,11 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
-            /*
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
-            FileStreamMap workerFileStreams =
-                _getWorkerFileStreamMap(workerIndex);
-
-            // Create table headers if needed
-            _createWayTables(workerIndex, workerFileStreams);
-
             // Write this primitive to disk
-            _writeWayToTables( way, workerFileStreams );
-            */
+            _writeWayToTables( way, workerIndex );
         }
 
         void NoTableConstraints::visit(
@@ -377,66 +369,70 @@ namespace OsmDataWriter
             }
         }
 
+
+
         void NoTableConstraints::_createWayTables(
-            const unsigned int                  workerIndex,
-            WorkerThreadContext&    workerContext )
+            const unsigned int                          workerIndex,
+            ::std::shared_ptr<WorkerThreadContext>&     workerContext )
         {
-            /*
-            if ( workerFileStreams->count(::std::string("current_ways")) == 0 )
-            {
-                //std::cout << "Have to create tables" << std::endl;
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_ways"),
-                                      _createTable(
-                                          workerIndex,
-                                          "current_ways",
-                                          "COPY current_ways (id, changeset_id, "
-                                          "\"timestamp\", visible, version) "
-                                          "FROM stdin;\n")));
+            workerContext->newTable(
+                "current_ways",
+                _createTable(
+                    workerIndex,
+                    "current_ways",
+                    "COPY current_ways (id, changeset_id, "
+                    "\"timestamp\", visible, version) FROM stdin;"));
 
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_way_tags"),
-                                      _createTable( workerIndex, "current_way_tags",
-                                                    "COPY current_way_tags (way_id, k, v) FROM stdin;\n")));
+            workerContext->newTable(
+                "current_way_tags",
+                _createTable( workerIndex,
+                              "current_way_tags",
+                              "COPY current_way_tags (way_id, k, v) FROM stdin;\n"));
 
+            workerContext->newTable(
+                "current_way_nodes",
+                _createTable(
+                    workerIndex, "current_way_nodes",
+                    "COPY current_way_nodes (way_id, node_id, "
+                    "sequence_id) FROM stdin;\n"));
 
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_way_nodes"),
-                                      _createTable( workerIndex, "current_way_nodes",
-                                                    "COPY current_way_nodes (way_id, node_id, "
-                                                    "sequence_id) FROM stdin;\n")));
+            workerContext->newTable(
+                "ways",
+                _createTable(
+                    workerIndex,
+                    "ways",
+                    "COPY ways (way_id, changeset_id, \"timestamp\", "
+                    "version, visible, redaction_id) FROM stdin;\n"));
 
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("ways"),
-                                      _createTable(
-                                          workerIndex,
-                                          "ways",
-                                          "COPY ways (way_id, changeset_id, "
-                                          "\"timestamp\", version, visible, "
-                                          "redaction_id) FROM stdin;\n")));
-
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("way_tags"),
-                                      _createTable( workerIndex, "way_tags",
-                                                    "COPY way_tags (way_id, version, k, v) "
-                                                    "FROM stdin;\n" )));
+            workerContext->newTable(
+                "way_tags",
+                _createTable( workerIndex, "way_tags",
+                              "COPY way_tags (way_id, version, k, v) "
+                              "FROM stdin;\n"));
 
 
-                workerFileStreams->insert(
-                    ::std::make_pair( std::string("way_nodes"),
-                                      _createTable( workerIndex, "way_nodes",
-                                                    "COPY way_nodes (way_id, node_id, version, sequence_id) "
-                                                    "FROM stdin;\n" )));
-            }
+            workerContext->newTable(
+                "way_nodes",
+                _createTable( workerIndex, "way_nodes",
+                              "COPY way_nodes (way_id, node_id, version, "
+                              "sequence_id) FROM stdin;\n"));
 
-
-            */
+            workerContext->wayTablesCreated(true);
         }
 
-        void NoTableConstraints::_writeWayToTables(
+       void NoTableConstraints::_writeWayToTables(
             const ::OsmFileParser::OsmPrimitive::Way&   way,
-            WorkerThreadContext&                        workerContext )
+            const unsigned int                          workerContextIndex )
         {
+            ::std::shared_ptr<WorkerThreadContext> workerContext =
+                _getWorkerContext(workerContextIndex);
+
+            // Do we need to create tables?
+            if ( workerContext->wayTablesCreated() == false )
+            {
+                _createWayTables(workerContextIndex, workerContext );
+            }
+
             /*
             ::std::stringstream waysStream;
             waysStream <<

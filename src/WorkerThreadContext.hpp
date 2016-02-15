@@ -32,6 +32,30 @@ namespace OsmDataWriter
                     m_nodeTablesCreated = created;
                 }
 
+                bool wayTablesCreated() const
+                {
+                    return m_wayTablesCreated;
+                }
+
+                void wayTablesCreated(
+                    const bool  created
+                )
+                {
+                    m_wayTablesCreated = created;
+                }
+
+                bool relationTablesCreated() const
+                {
+                    return m_relationTablesCreated;
+                }
+
+                void relationTablesCreated(
+                    const bool  created
+                )
+                {
+                    m_relationTablesCreated = created;
+                }
+
                 void newTable(
                     const ::std::string&                tableName,
                     ::std::shared_ptr<::std::ostream>   fileStream
