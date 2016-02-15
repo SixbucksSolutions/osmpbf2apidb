@@ -95,15 +95,6 @@ namespace OsmDataWriter
                     const ::std::string&    tableSchema
                 );
 
-                void _writeToFileStream(
-                    const ::std::string&    fileStreamName,
-                    const ::std::string&    writeData,
-                    WorkerThreadContext&    workerThreadContext
-                )
-                {
-                    //*(workerFileStreams->at(fileStreamName)) << writeData;
-                }
-
                 void _createNodeTables(
                     const unsigned int                      workerIndex,
                     ::std::shared_ptr<WorkerThreadContext>& workerThreadContext
@@ -158,6 +149,13 @@ namespace OsmDataWriter
                     const ::OsmFileParser::OsmPrimitive::Relation&  relation,
                     const unsigned int                              workerThreadIndex
                 );
+
+                void _writeRelationMembersToTables(
+                    const ::OsmFileParser::OsmPrimitive::Relation&  relation,
+                    ::std::shared_ptr<WorkerThreadContext>&         workerThreadContext
+                );
+
+
         };
     }
 }

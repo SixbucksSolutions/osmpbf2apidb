@@ -493,53 +493,53 @@ namespace OsmDataWriter
             ::std::shared_ptr<WorkerThreadContext>& workerContext )
         {
             workerContext->newTable(
-				"current_relations",
+                "current_relations",
                 _createTable(
-                	workerIndex, "current_relations",
-                	"COPY current_relations (id, changeset_id, "
-					"\"timestamp\", visible, version) FROM stdin;"));
+                    workerIndex, "current_relations",
+                    "COPY current_relations (id, changeset_id, "
+                    "\"timestamp\", visible, version) FROM stdin;"));
 
-			workerContext->newTable(
-				"current_relation_tags",
+            workerContext->newTable(
+                "current_relation_tags",
                 _createTable(
-                	workerIndex, "current_relation_tags",
-                	"COPY current_relation_tags "
-                	"(relation_id, k, v) FROM stdin;"));
+                    workerIndex, "current_relation_tags",
+                    "COPY current_relation_tags "
+                    "(relation_id, k, v) FROM stdin;"));
 
 
-			workerContext->newTable(
-				"current_relation_members",
+            workerContext->newTable(
+                "current_relation_members",
                 _createTable(
-                	workerIndex, "current_relation_members",
-                	"COPY current_relation_members "
-                	"(relation_id, member_type, member_id, "
-                	"member_role, sequence_id) FROM stdin;"));
+                    workerIndex, "current_relation_members",
+                    "COPY current_relation_members "
+                    "(relation_id, member_type, member_id, "
+                    "member_role, sequence_id) FROM stdin;"));
 
-			workerContext->newTable(
-				"relations",
+            workerContext->newTable(
+                "relations",
                 _createTable(
-                	workerIndex, "relations",
-                	"COPY relations (relation_id, changeset_id, "
-                	"\"timestamp\", version, visible, "
-                	"redaction_id) FROM stdin;"));
+                    workerIndex, "relations",
+                    "COPY relations (relation_id, changeset_id, "
+                    "\"timestamp\", version, visible, "
+                    "redaction_id) FROM stdin;"));
 
-			workerContext->newTable(
-				"relation_tags",
+            workerContext->newTable(
+                "relation_tags",
                 _createTable(
-                	workerIndex, "relation_tags",
-                	"COPY relation_tags (relation_id, "
-                	"version, k, v) FROM stdin;"));
+                    workerIndex, "relation_tags",
+                    "COPY relation_tags (relation_id, "
+                    "version, k, v) FROM stdin;"));
 
 
-			workerContext->newTable(
-				"relation_members",
+            workerContext->newTable(
+                "relation_members",
                 _createTable(
-                workerIndex, "relation_members",
-                	"COPY relation_members (relation_id, "
-                	"member_type, member_id, member_role, "
-                	"version, sequence_id) FROM stdin;"));
+                    workerIndex, "relation_members",
+                    "COPY relation_members (relation_id, "
+                    "member_type, member_id, member_role, "
+                    "version, sequence_id) FROM stdin;"));
 
-			workerContext->relationTablesCreated(true);
+            workerContext->relationTablesCreated(true);
         }
 
         void NoTableConstraints::_writeRelationToTables(
@@ -555,41 +555,29 @@ namespace OsmDataWriter
                 _createRelationTables(workerContextIndex, workerContext );
             }
 
-            /*
-            // Write relations
-            ::std::stringstream relationsStream;
-            relationsStream <<
-                            ::boost::format("%d\t%d\t%s\tt\t%d\n") %
-                            relation.getPrimitiveId() %
-                            relation.getChangesetId() %
-                            _generateISO8601(relation.getTimestamp()) %
-                            relation.getVersion();
+            *(workerContext->getTable("current_relations")) <<
+                    relation.getPrimitiveId()       << "\t"     <<
+                    relation.getChangesetId()       << "\t"     <<
+                    _generateISO8601(
+                        relation.getTimestamp())    << "\t"     <<
+                    "t"                             << "\t"     << // visible
+                    relation.getVersion()           <<
+                    ::std::endl;
 
-            _writeToFileStream( "current_relations", relationsStream.str(),
-                                workerFileStreams );
+            *(workerContext->getTable("relations")) <<
+                                                    relation.getPrimitiveId()       << "\t"     <<
+                                                    relation.getChangesetId()       << "\t"     <<
+                                                    _generateISO8601(
+                                                            relation.getTimestamp())    << "\t"     <<
+                                                    relation.getVersion()           << "\t"     <<
+                                                    "t"                             << "\t"     <<  // visible
+                                                    "\\N"                           <<              // redaction
+                                                    ::std::endl;
 
-            relationsStream.str( ::std::string() );
+            _writeTags( relation, workerContext, "current_relation_tags",
+                        "relation_tags" );
 
-            relationsStream <<
-                            ::boost::format("%d\t%d\t%d\t%s\tt\\N\n")   %
-                            relation.getPrimitiveId()                        %
-                            relation.getChangesetId()                        %
-                            relation.getVersion()                            %
-                            _generateISO8601(relation.getTimestamp());
-
-            _writeTagsToTable( relation,
-                               ::std::string("current_relation_tags"),
-                               ::std::string("%d\t%s\t%s\n"),
-                               workerFileStreams );
-
-            _writeTagsToTable( relation,
-                               relation.getVersion(),
-                               ::std::string("relation_tags"),
-                               ::std::string("%d\t%d\t%s\t%s\n"),
-                               workerFileStreams );
-
-            // Write relation members
-            */
+            _writeRelationMembersToTables( relation, workerContext );
         }
 
         std::shared_ptr<WorkerThreadContext> NoTableConstraints::_getWorkerContext(
@@ -598,6 +586,79 @@ namespace OsmDataWriter
             ::std::lock_guard<::std::mutex> lockGuard(m_workerThreadContextsMutex);
 
             return m_workerThreadContexts.at(workerThreadIndex);
+        }
+
+        void NoTableConstraints::_writeRelationMembersToTables(
+            const ::OsmFileParser::OsmPrimitive::Relation&  relation,
+            ::std::shared_ptr<WorkerThreadContext>&         workerContext )
+        {
+            const ::OsmFileParser::OsmPrimitive::Relation::RelationMembers
+            relationMembers = relation.getRelationMembers();
+
+            const ::OsmFileParser::OsmPrimitive::Identifier relationId =
+                relation.getPrimitiveId();
+
+            const ::OsmFileParser::OsmPrimitive::Version relationVersion =
+                relation.getVersion();
+
+            ::std::shared_ptr<::std::ostream> currentRelationMembersStream =
+                workerContext->getTable("current_relation_members");
+
+            ::std::shared_ptr<::std::ostream> relationMembersStream =
+                workerContext->getTable("relation_members");
+
+            for ( unsigned int i = 0; i < relationMembers.size(); ++i )
+            {
+                const ::OsmFileParser::OsmPrimitive::Relation::RelationMember
+                currRelationMember = relationMembers.at(i);
+
+                ::std::string relationMemberType;
+
+                switch ( currRelationMember.memberType )
+                {
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::NODE:
+                        relationMemberType = ::std::string("node");
+
+                        break;
+
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::WAY:
+                        relationMemberType = ::std::string("way");
+
+                        break;
+
+                    case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::RELATION:
+                        relationMemberType = ::std::string("relation");
+
+                        break;
+
+                    default:
+                        throw ( "Invalid relation member type" );
+
+                        break;
+                }
+
+                const ::OsmFileParser::OsmPrimitive::Identifier memberId =
+                    currRelationMember.memberId;
+
+                const ::std::string memberRole(currRelationMember.memberRole.toUtf8());
+
+                *currentRelationMembersStream  <<
+                                               relationId          << "\t" <<
+                                               relationMemberType  << "\t" <<
+                                               memberId            << "\t" <<
+                                               memberRole          << "\t" <<
+                                               (i + 1)             <<
+                                               ::std::endl;
+
+                *relationMembersStream  <<
+                                        relationId          << "\t" <<
+                                        relationMemberType  << "\t" <<
+                                        memberId            << "\t" <<
+                                        memberRole          << "\t" <<
+                                        relationVersion     << "\t" <<
+                                        (i + 1)             <<
+                                        ::std::endl;
+            }
         }
     }
 }

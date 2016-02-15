@@ -42,6 +42,11 @@ namespace OsmFileParser
 
                 virtual ~Relation() { }
 
+                RelationMembers getRelationMembers() const
+                {
+                    return m_relationMembers;
+                }
+
                 virtual ::std::string toString() const;
 
             protected:
