@@ -150,13 +150,13 @@ namespace OsmDataWriter
                 );
 
                 void _createRelationTables(
-                    const unsigned int      workerIndex,
-                    WorkerThreadContext&    workerThreadContext
+                    const unsigned int                          workerIndex,
+                    ::std::shared_ptr<WorkerThreadContext>&     workerContext
                 );
 
                 void _writeRelationToTables(
                     const ::OsmFileParser::OsmPrimitive::Relation&  relation,
-                    WorkerThreadContext&                            workerThreadContext
+                    const unsigned int                              workerThreadIndex
                 );
         };
     }
