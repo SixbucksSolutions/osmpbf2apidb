@@ -146,7 +146,7 @@ namespace OsmDataWriter
 
                 void _writeWayNodesToTables(
                     const ::OsmFileParser::OsmPrimitive::Way&   way,
-                    WorkerThreadContext&                        workerThreadContext
+                    ::std::shared_ptr<WorkerThreadContext>&     workerThreadContext
                 );
 
                 void _createRelationTables(

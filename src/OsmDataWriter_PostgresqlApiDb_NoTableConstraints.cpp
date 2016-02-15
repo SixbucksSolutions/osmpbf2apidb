@@ -451,26 +451,15 @@ namespace OsmDataWriter
                                                 "t"                         << "\t"     <<  // visible
                                                 "\\N"                       <<              // redaction
                                                 ::std::endl;
-            /*
 
-            _writeTagsToTable( way,
-                               ::std::string("current_way_tags"),
-                               ::std::string("%d\t%s\t%s\n"),
-                               workerFileStreams );
+            _writeTags( way, workerContext, "current_way_tags", "way_tags" );
 
-            _writeTagsToTable( way,
-                               way.getVersion(),
-                               ::std::string("way_tags"),
-                               ::std::string("%d\t%d\t%s\t%s\n"),
-                               workerFileStreams );
-
-            _writeWayNodesToTables( way, workerFileStreams );
-            */
+            _writeWayNodesToTables( way, workerContext );
         }
 
         void NoTableConstraints::_writeWayNodesToTables(
             const ::OsmFileParser::OsmPrimitive::Way&   way,
-            WorkerThreadContext&                        workerContext )
+            ::std::shared_ptr<WorkerThreadContext>&     workerContext )
         {
             /*
             const ::OsmFileParser::OsmPrimitive::Way::WayNodeRefs
