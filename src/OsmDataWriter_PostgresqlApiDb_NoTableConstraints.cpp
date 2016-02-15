@@ -492,55 +492,54 @@ namespace OsmDataWriter
             const unsigned int                      workerIndex,
             ::std::shared_ptr<WorkerThreadContext>& workerContext )
         {
-            /*
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_relations"),
-                        _createTable(
-                            workerIndex, "current_relations",
-                            "COPY current_relations (id, "
-                            "changeset_id, \"timestamp\", "
-                            "visible, version) FROM stdin;\n")));
+            workerContext->newTable(
+				"current_relations",
+                _createTable(
+                	workerIndex, "current_relations",
+                	"COPY current_relations (id, changeset_id, "
+					"\"timestamp\", visible, version) FROM stdin;"));
 
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_relation_tags"),
-                        _createTable(
-                            workerIndex, "current_relation_tags",
-                            "COPY current_relation_tags "
-                            "(relation_id, k, v) FROM stdin;\n")));
+			workerContext->newTable(
+				"current_relation_tags",
+                _createTable(
+                	workerIndex, "current_relation_tags",
+                	"COPY current_relation_tags "
+                	"(relation_id, k, v) FROM stdin;"));
 
 
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("current_relation_members"),
-                        _createTable(
-                            workerIndex, "current_relation_members",
-                            "COPY current_relation_members "
-                            "(relation_id, member_type, member_id, "
-                            "member_role, sequence_id) FROM stdin;\n")));
+			workerContext->newTable(
+				"current_relation_members",
+                _createTable(
+                	workerIndex, "current_relation_members",
+                	"COPY current_relation_members "
+                	"(relation_id, member_type, member_id, "
+                	"member_role, sequence_id) FROM stdin;"));
 
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("relations"),
-                        _createTable(
-                            workerIndex, "relations",
-                            "COPY relations (relation_id, changeset_id, "
-                            "\"timestamp\", version, visible, "
-                            "redaction_id) FROM stdin;\n")));
+			workerContext->newTable(
+				"relations",
+                _createTable(
+                	workerIndex, "relations",
+                	"COPY relations (relation_id, changeset_id, "
+                	"\"timestamp\", version, visible, "
+                	"redaction_id) FROM stdin;"));
 
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("relation_tags"),
-                        _createTable(
-                            workerIndex, "relation_tags",
-                            "COPY relation_tags (relation_id, "
-                            "version, k, v) FROM stdin;\n")));
+			workerContext->newTable(
+				"relation_tags",
+                _createTable(
+                	workerIndex, "relation_tags",
+                	"COPY relation_tags (relation_id, "
+                	"version, k, v) FROM stdin;"));
 
 
-            workerFileStreams->insert(
-                    ::std::make_pair( std::string("relation_members"),
-                        _createTable(
-                            workerIndex, "relation_members",
-                            "COPY relation_members (relation_id, "
-                            "member_type, member_id, member_role, "
-                            "version, sequence_id) FROM stdin;\n" )));
-            */
+			workerContext->newTable(
+				"relation_members",
+                _createTable(
+                workerIndex, "relation_members",
+                	"COPY relation_members (relation_id, "
+                	"member_type, member_id, member_role, "
+                	"version, sequence_id) FROM stdin;"));
+
+			workerContext->relationTablesCreated(true);
         }
 
         void NoTableConstraints::_writeRelationToTables(
