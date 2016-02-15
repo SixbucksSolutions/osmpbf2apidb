@@ -7,9 +7,9 @@ Install OSM-Binary dependencies
 Compile/install libosmpbf
 
 	git clone https://github.com/scrosby/OSM-binary
-	cd OSM-Binary
+	cd OSM-binary
 	git checkout v1.3.3
-	make -C src 
+	make -C src
 	sudo make -C src install
 
 Get Git Repo for project
