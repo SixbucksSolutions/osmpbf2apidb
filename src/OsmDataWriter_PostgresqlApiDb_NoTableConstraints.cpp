@@ -420,7 +420,7 @@ namespace OsmDataWriter
             workerContext->wayTablesCreated(true);
         }
 
-       void NoTableConstraints::_writeWayToTables(
+        void NoTableConstraints::_writeWayToTables(
             const ::OsmFileParser::OsmPrimitive::Way&   way,
             const unsigned int                          workerContextIndex )
         {
@@ -433,29 +433,25 @@ namespace OsmDataWriter
                 _createWayTables(workerContextIndex, workerContext );
             }
 
+            *(workerContext->getTable("current_ways")) <<
+                    way.getPrimitiveId()        << "\t"     <<
+                    way.getChangesetId()        << "\t"     <<
+                    _generateISO8601(
+                        way.getTimestamp())     << "\t"     <<
+                    "t"                         << "\t"     << // visible
+                    way.getVersion()            <<
+                    ::std::endl;
+
+            *(workerContext->getTable("ways"))  <<
+                                                way.getPrimitiveId()        << "\t"     <<
+                                                way.getChangesetId()        << "\t"     <<
+                                                _generateISO8601(
+                                                    way.getTimestamp())     << "\t"     <<
+                                                way.getVersion()            << "\t"     <<
+                                                "t"                         << "\t"     <<  // visible
+                                                "\\N"                       <<              // redaction
+                                                ::std::endl;
             /*
-            ::std::stringstream waysStream;
-            waysStream <<
-                       ::boost::format("%d\t%d\t%s\tt\t%d\n") %
-                       way.getPrimitiveId() %
-                       way.getChangesetId() %
-                       _generateISO8601(way.getTimestamp()) %
-                       way.getVersion();
-
-            _writeToFileStream( "current_ways", waysStream.str(),
-                                workerFileStreams );
-
-            waysStream.str( ::std::string() );
-
-            waysStream <<
-                       ::boost::format("%d\t%d\t%s\t%d\tt\\N\n")   %
-                       way.getPrimitiveId()                        %
-                       way.getChangesetId()                        %
-                       way.getVersion()                            %
-                       _generateISO8601(way.getTimestamp());
-
-            _writeToFileStream( "ways", waysStream.str(),
-                                workerFileStreams );
 
             _writeTagsToTable( way,
                                ::std::string("current_way_tags"),
