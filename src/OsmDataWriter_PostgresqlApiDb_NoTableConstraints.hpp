@@ -14,6 +14,7 @@
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Way.hpp"
+#include "OsmFileParser/include/Changeset.hpp"
 #include "WorkerThreadList.hpp"
 #include "WorkerThreadContext.hpp"
 
@@ -71,6 +72,12 @@ namespace OsmDataWriter
 
                 ::std::map < int,
                 ::std::shared_ptr<WorkerThreadContext >> m_workerThreadContexts;
+
+                ::std::mutex            m_changesetsMutex;
+                ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+                ::std::shared_ptr <
+                ::OsmFileParser::OsmPrimitive::Changeset >>
+                m_changesets;
 
                 void _createSectionNameList();
 

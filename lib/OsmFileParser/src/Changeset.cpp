@@ -2,9 +2,9 @@
 #include "Primitive.hpp"
 #include "Changeset.hpp"
 
-namespace OsmDataWriter
+namespace OsmFileParser
 {
-    namespace PostgresqlApiDb
+    namespace OsmPrimitive
     {
         Changeset::Changeset(
             const ::OsmFileParser::OsmPrimitive::Identifier changesetId,
