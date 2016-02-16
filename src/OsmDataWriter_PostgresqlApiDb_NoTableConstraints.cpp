@@ -679,5 +679,30 @@ namespace OsmDataWriter
                                         ::std::endl;
             }
         }
+
+        void NoTableConstraints::_addOrUpdateChangeset(
+            const ::std::shared_ptr<::OsmFileParser::OsmPrimitive::Changeset>& changeset )
+        {
+            ::std::lock_guard<::std::mutex> lockGuard(m_changesetsMutex);
+            const ::OsmFileParser::OsmPrimitive::Identifier changesetId(
+                changeset->getChangesetId() );
+
+            ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+            ::std::shared_ptr <
+            ::OsmFileParser::OsmPrimitive::Changeset >>::iterator searchIter(
+                m_changesets.find(changesetId));
+
+            if ( searchIter == m_changesets.end() )
+            {
+                // Need to add to list
+                m_changesets.insert( ::std::make_pair(changesetId, changeset) );
+            }
+            else
+            {
+                // Update access time
+                searchIter->second->updateAccess(changeset->getOpenedAt());
+                searchIter->second->updateAccess(changeset->getClosedAt());
+            }
+        }
     }
 }

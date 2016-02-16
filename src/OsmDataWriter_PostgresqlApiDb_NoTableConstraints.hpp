@@ -162,7 +162,10 @@ namespace OsmDataWriter
                     ::std::shared_ptr<WorkerThreadContext>&         workerThreadContext
                 );
 
-
+                void _addOrUpdateChangeset(
+                    const ::std::shared_ptr <
+                    ::OsmFileParser::OsmPrimitive::Changeset > & changeset
+                );
         };
     }
 }
