@@ -166,6 +166,10 @@ namespace OsmDataWriter
                     const ::std::shared_ptr <
                     ::OsmFileParser::OsmPrimitive::Changeset > & changeset
                 );
+
+                void _updateChangesets(
+                    ::OsmFileParser::OsmPrimitive::Primitive const* const pPrimitive
+                );
         };
     }
 }
