@@ -4,9 +4,9 @@
 #include <cstdint>
 #include "Primitive.hpp"
 
-namespace OsmDataWriter
+namespace OsmFileParser
 {
-    namespace PostgresqlApiDb
+    namespace OsmPrimitive
     {
         class Changeset
         {

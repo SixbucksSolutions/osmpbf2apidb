@@ -15,6 +15,8 @@
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Node.hpp"
 #include "OsmFileParser/include/Way.hpp"
+#include "OsmFileParser/include/Relation.hpp"
+#include "OsmFileParser/include/Changeset.hpp"
 #include "OsmFileParser/include/LonLatCoordinate.hpp"
 #include "OsmFileParser/include/Utf16String.hpp"
 #include "WorkerThreadContext.hpp"
@@ -33,7 +35,9 @@ namespace OsmDataWriter
             m_workerThreadList(),
             m_fileSectionList(),
             m_workerThreadContextsMutex(),
-            m_workerThreadContexts()
+            m_workerThreadContexts(),
+            m_changesetsMutex(),
+            m_changesets()
         {
             if ( ::boost::filesystem::is_directory(m_outputDir) ==
                     false )
