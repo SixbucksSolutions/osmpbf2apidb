@@ -18,7 +18,10 @@ namespace OsmDataWriter
 
                 WorkerThreadContext();
 
-                virtual ~WorkerThreadContext() { }
+                virtual ~WorkerThreadContext()
+                {
+                    closeAllTables();
+                }
 
                 bool nodeTablesCreated() const
                 {
@@ -67,6 +70,8 @@ namespace OsmDataWriter
                 {
                     return m_fileStreams.at(tableName);
                 }
+
+                void closeAllTables();
 
 
             protected:
