@@ -28,7 +28,7 @@ namespace OsmDataWriter
                     const ::boost::filesystem::path&    sqlDirectory
                 );
 
-                virtual ~NoTableConstraints() { }
+                virtual ~NoTableConstraints();
 
                 virtual bool shouldVisitNodes() const
                 {

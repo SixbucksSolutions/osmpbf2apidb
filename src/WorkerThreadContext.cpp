@@ -25,5 +25,17 @@ namespace OsmDataWriter
         {
             m_fileStreams.insert( ::std::make_pair(tableName, fileStream) );
         }
+
+        void WorkerThreadContext::closeAllTables()
+        {
+            for (
+                FileStreamMap::iterator it = m_fileStreams.begin();
+                it != m_fileStreams.end();
+                ++it )
+            {
+                //std::cout << "Closing " << it->first << std::endl;
+                *(it->second) << "\\.\n\n";
+            }
+        }
     }
 }

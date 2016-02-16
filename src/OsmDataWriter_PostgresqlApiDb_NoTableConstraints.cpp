@@ -51,6 +51,21 @@ namespace OsmDataWriter
             _createSectionNameList();
         }
 
+
+        NoTableConstraints::~NoTableConstraints()
+        {
+            // Terminate all open file handles with proper character
+            for ( ::std::map < int,
+                    ::std::shared_ptr<WorkerThreadContext >>::iterator it =
+                        m_workerThreadContexts.begin();
+                    it != m_workerThreadContexts.end();
+                    ++it )
+            {
+                ;
+            }
+        }
+
+
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
