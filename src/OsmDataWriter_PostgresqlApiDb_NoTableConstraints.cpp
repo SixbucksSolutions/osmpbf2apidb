@@ -194,7 +194,7 @@ namespace OsmDataWriter
                     workerIndex,
                     "node_tags",
                     "COPY node_tags (node_id, version, k, v) "
-                    "FROM stdin;\n") );
+                    "FROM stdin;") );
 
             //std::cout << "Leaving _createNodeTables" << std::endl;
 
@@ -394,14 +394,14 @@ namespace OsmDataWriter
                 "current_way_tags",
                 _createTable( workerIndex,
                               "current_way_tags",
-                              "COPY current_way_tags (way_id, k, v) FROM stdin;\n"));
+                              "COPY current_way_tags (way_id, k, v) FROM stdin;"));
 
             workerContext->newTable(
                 "current_way_nodes",
                 _createTable(
                     workerIndex, "current_way_nodes",
                     "COPY current_way_nodes (way_id, node_id, "
-                    "sequence_id) FROM stdin;\n"));
+                    "sequence_id) FROM stdin;"));
 
             workerContext->newTable(
                 "ways",
@@ -409,20 +409,20 @@ namespace OsmDataWriter
                     workerIndex,
                     "ways",
                     "COPY ways (way_id, changeset_id, \"timestamp\", "
-                    "version, visible, redaction_id) FROM stdin;\n"));
+                    "version, visible, redaction_id) FROM stdin;"));
 
             workerContext->newTable(
                 "way_tags",
                 _createTable( workerIndex, "way_tags",
                               "COPY way_tags (way_id, version, k, v) "
-                              "FROM stdin;\n"));
+                              "FROM stdin;"));
 
 
             workerContext->newTable(
                 "way_nodes",
                 _createTable( workerIndex, "way_nodes",
                               "COPY way_nodes (way_id, node_id, version, "
-                              "sequence_id) FROM stdin;\n"));
+                              "sequence_id) FROM stdin;"));
 
             workerContext->wayTablesCreated(true);
         }
@@ -632,17 +632,17 @@ namespace OsmDataWriter
                 switch ( currRelationMember.memberType )
                 {
                     case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::NODE:
-                        relationMemberType = ::std::string("node");
+                        relationMemberType = ::std::string("Node");
 
                         break;
 
                     case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::WAY:
-                        relationMemberType = ::std::string("way");
+                        relationMemberType = ::std::string("Way");
 
                         break;
 
                     case ::OsmFileParser::OsmPrimitive::Relation::RelationMemberType::RELATION:
-                        relationMemberType = ::std::string("relation");
+                        relationMemberType = ::std::string("Relation");
 
                         break;
 
