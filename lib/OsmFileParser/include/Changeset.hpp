@@ -2,6 +2,7 @@
 #define _CHANGESET_HPP
 
 #include <cstdint>
+#include "Utf16String.hpp"
 #include "Primitive.hpp"
 
 namespace OsmFileParser
@@ -13,10 +14,7 @@ namespace OsmFileParser
             public:
                 Changeset(
                     const ::OsmFileParser::OsmPrimitive::Identifier
-                    changesetId,
-
-                    const ::OsmFileParser::OsmPrimitive::Identifier
-                    userId
+                    changesetId
                 );
 
                 virtual ~Changeset() { }
@@ -26,6 +24,22 @@ namespace OsmFileParser
                     const ::OsmFileParser::OsmPrimitive::Timestamp
                     accessTimestamp
                 );
+
+                void setUserId(
+                    const ::OsmFileParser::OsmPrimitive::Identifier
+                    userId
+                )
+                {
+                    m_userId = userId;
+                }
+
+                void setUsername(
+                    const ::OsmFileParser::Utf16String& username
+                )
+                {
+                    m_username.setFromUtf8Bytes(username.toUtf8());
+                }
+
 
                 void incrementChanges()
                 {
@@ -42,6 +56,12 @@ namespace OsmFileParser
                 getUserId() const
                 {
                     return m_userId;
+                }
+
+                ::OsmFileParser::Utf16String
+                getUsername() const
+                {
+                    return m_username;
                 }
 
                 ::OsmFileParser::OsmPrimitive::Timestamp
@@ -65,6 +85,7 @@ namespace OsmFileParser
             protected:
                 ::OsmFileParser::OsmPrimitive::Identifier   m_changesetId;
                 ::OsmFileParser::OsmPrimitive::Identifier   m_userId;
+                ::OsmFileParser::Utf16String                m_username;
                 ::OsmFileParser::OsmPrimitive::Timestamp    m_openedAt;
                 ::OsmFileParser::OsmPrimitive::Timestamp    m_closedAt;
                 ::std::uint64_t                 m_changesetChanges;

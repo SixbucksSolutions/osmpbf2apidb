@@ -58,21 +58,52 @@ namespace OsmDataWriter
 
         NoTableConstraints::~NoTableConstraints()
         {
-            // Terminate all open file handles with proper character
-            for ( ::std::map < int,
-                    ::std::shared_ptr<WorkerThreadContext >>::iterator it =
-                        m_workerThreadContexts.begin();
-                    it != m_workerThreadContexts.end();
-                    ++it )
+	    /*
+            ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+            ::std::shared_ptr <
+            ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
+
+            std::cout << "Printing changesets:" << std::endl;
+
+            // Write out changesets
+            for ( iter =  m_changesets.cbegin();
+                    iter != m_changesets.cend();
+                    ++iter )
             {
-                ;
+                const ::std::shared_ptr <
+                ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
+                    iter->second);
+
+		/*
+                std::cout << 
+			"\tChangeset   : " << currChangeset->getChangesetId() <<
+                        std::endl <<
+
+                	"\t\tUser ID   : " << currChangeset->getUserId() <<
+                        std::endl <<
+
+                	"\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
+                        std::endl <<
+
+                	"\t\tOpened at : " << _generateISO8601(
+                        currChangeset->getOpenedAt()) << std::endl <<
+
+                	"\t\tClosed at : " << _generateISO8601(
+                              currChangeset->getClosedAt()) << std::endl <<
+
+			"\t\tChanges   : " << currChangeset->getChanges() <<
+			std::endl;
             }
+	    */
         }
 
 
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Node& node )
         {
+            // Create changeset info to update master list as needed
+            _updateChangesets( &node );
+
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -83,6 +114,7 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Way& way )
         {
+            _updateChangesets( &way );
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -93,6 +125,8 @@ namespace OsmDataWriter
         void NoTableConstraints::visit(
             const ::OsmFileParser::OsmPrimitive::Relation& relation )
         {
+            _updateChangesets( &relation );
+
             const unsigned int workerIndex =
                 _addWorkerThreadToThreadList();
 
@@ -695,6 +729,7 @@ namespace OsmDataWriter
             if ( searchIter == m_changesets.end() )
             {
                 // Need to add to list
+		changeset->incrementChanges();
                 m_changesets.insert( ::std::make_pair(changesetId, changeset) );
             }
             else
@@ -702,7 +737,21 @@ namespace OsmDataWriter
                 // Update access time
                 searchIter->second->updateAccess(changeset->getOpenedAt());
                 searchIter->second->updateAccess(changeset->getClosedAt());
+		searchIter->second->incrementChanges();
             }
+        }
+
+        void NoTableConstraints::_updateChangesets(
+            ::OsmFileParser::OsmPrimitive::Primitive const* const pPrimitive )
+        {
+            ::std::shared_ptr<::OsmFileParser::OsmPrimitive::Changeset> newChangeset(
+                new ::OsmFileParser::OsmPrimitive::Changeset(pPrimitive->getChangesetId()) );
+
+            newChangeset->updateAccess( pPrimitive->getTimestamp() );
+            newChangeset->setUserId( pPrimitive->getUserId() );
+            newChangeset->setUsername( pPrimitive->getUsername() );
+
+            _addOrUpdateChangeset(newChangeset);
         }
     }
 }
