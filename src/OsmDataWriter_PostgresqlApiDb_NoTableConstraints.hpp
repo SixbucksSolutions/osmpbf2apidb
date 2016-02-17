@@ -170,6 +170,10 @@ namespace OsmDataWriter
                 void _updateChangesets(
                     ::OsmFileParser::OsmPrimitive::Primitive const* const pPrimitive
                 );
+
+                void _writeUtf8ByteOrderMark(
+                    ::std::ostream&    writeStream
+                ) const;
         };
     }
 }

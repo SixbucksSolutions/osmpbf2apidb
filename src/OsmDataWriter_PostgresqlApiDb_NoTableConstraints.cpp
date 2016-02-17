@@ -9,6 +9,7 @@
 #include <fstream>
 #include <ctime>
 #include <cmath>
+#include <unordered_set>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include "OsmFileParser/include/Primitive.hpp"
@@ -59,41 +60,100 @@ namespace OsmDataWriter
         NoTableConstraints::~NoTableConstraints()
         {
             /*
-                ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
-                ::std::shared_ptr <
-                ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
+               ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+               ::std::shared_ptr <
+               ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
 
-                std::cout << "Printing changesets:" << std::endl;
+               std::cout << "Printing changesets:" << std::endl;
 
-                // Write out changesets
-                for ( iter =  m_changesets.cbegin();
-                        iter != m_changesets.cend();
-                        ++iter )
+            // Write out changesets
+            for ( iter =  m_changesets.cbegin();
+            iter != m_changesets.cend();
+            ++iter )
+            {
+            const ::std::shared_ptr <
+            ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
+            iter->second);
+
+            std::cout <<
+            "\tChangeset   : " << currChangeset->getChangesetId() <<
+            std::endl <<
+
+            "\t\tUser ID   : " << currChangeset->getUserId() <<
+            std::endl <<
+
+            "\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
+            std::endl <<
+
+            "\t\tOpened at : " << _generateISO8601(
+            currChangeset->getOpenedAt()) << std::endl <<
+
+            "\t\tClosed at : " << _generateISO8601(
+            currChangeset->getClosedAt()) << std::endl <<
+
+            "\t\tChanges   : " << currChangeset->getChanges() <<
+            std::endl;
+            }
+             */
+
+            // Write out users and changesets
+            ::std::unordered_set<::std::string> writtenUsernames;
+
+            ::std::ofstream userStream( (m_outputDir / "users.sql").string(),
+                                        ::std::ofstream::binary);
+
+            ::std::ofstream changesetStream( (m_outputDir / "changesets.sql").string(),
+                                             ::std::ofstream::binary);
+
+            // Write UTF-8 byte order mark to both
+            _writeUtf8ByteOrderMark(userStream);
+            _writeUtf8ByteOrderMark(changesetStream);
+
+            // Write table headers
+            userStream <<
+                       "COPY users (email, id, pass_crypt, creation_time, display_name) "
+                       "FROM stdin;" << ::std::endl;
+
+            changesetStream <<
+                            "COPY changesets ( id, user_id, created_at, min_lat, "
+                            "max_lat, min_lon, max_lon, closed_at, num_changes ) "
+                            "FROM stdin;" << ::std::endl;
+
+            ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+            ::std::shared_ptr <
+            ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
+
+            // Write out changesets
+            for ( iter =  m_changesets.cbegin();
+                    iter != m_changesets.cend();
+                    ++iter )
+            {
+                const ::OsmFileParser::OsmPrimitive::Changeset currChangeset(
+                    *(iter->second));
+
+                // Did we find a new user?
+                const ::std::string username( currChangeset.getUsername().toUtf8() );
+
+                if ( writtenUsernames.count(username) == 0 )
                 {
-                    const ::std::shared_ptr <
-                    ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
-                        iter->second);
+                    userStream <<
+                               "osmuser"                    <<
+                               currChangeset.getUserId()           <<
+                               "@osmpbf2apidb.local"                << "\t" <<
+                               currChangeset.getUserId()                    << "\t" <<
+                               ""                                       << "\t" <<
+                               _generateISO8601(currChangeset.getOpenedAt())    << "\t" <<
+                               username                                 <<
+                               ::std::endl;
 
-                    std::cout <<
-                "\tChangeset   : " << currChangeset->getChangesetId() <<
-                            std::endl <<
-
-                        "\t\tUser ID   : " << currChangeset->getUserId() <<
-                            std::endl <<
-
-                        "\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
-                            std::endl <<
-
-                        "\t\tOpened at : " << _generateISO8601(
-                            currChangeset->getOpenedAt()) << std::endl <<
-
-                        "\t\tClosed at : " << _generateISO8601(
-                                  currChangeset->getClosedAt()) << std::endl <<
-
-                "\t\tChanges   : " << currChangeset->getChanges() <<
-                std::endl;
+                    writtenUsernames.insert( username );
                 }
-            */
+            }
+
+
+            // Write closing data mark
+            userStream << "\\." << ::std::endl;
+            changesetStream << "\\." << ::std::endl;
         }
 
 
@@ -268,14 +328,8 @@ namespace OsmDataWriter
                                       tablePath.string(),
                                       ::std::ofstream::binary) );
 
-                // Write UTF-8 byte-order mark
-                //
-                //      Byte-order mark is Totally optional as UTF-8
-                //      can easily be determined by bitstream, but
-                //      removes any ambiguity
-                const unsigned char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
-                tableStream->write( reinterpret_cast<const char*>(
-                                        utf8BOM), sizeof(utf8BOM) );
+                // First three bytes should be UTF-8 byte order mark
+                _writeUtf8ByteOrderMark( *tableStream );
 
                 *tableStream << tableSchema << std::endl;
             }
@@ -752,5 +806,19 @@ namespace OsmDataWriter
 
             _addOrUpdateChangeset(newChangeset);
         }
+
+        void NoTableConstraints::_writeUtf8ByteOrderMark(
+            ::std::ostream&      writeStream ) const
+        {
+            // Write UTF-8 byte-order mark
+            //
+            //      Byte-order mark is Totally optional as UTF-8
+            //      can easily be determined by bitstream, but
+            //      removes any ambiguity
+            const unsigned char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
+            writeStream.write( reinterpret_cast<const char*>(
+                                   utf8BOM), sizeof(utf8BOM) );
+        }
+
     }
 }
