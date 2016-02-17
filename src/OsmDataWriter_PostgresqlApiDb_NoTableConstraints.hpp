@@ -174,6 +174,8 @@ namespace OsmDataWriter
                 void _writeUtf8ByteOrderMark(
                     ::std::ostream&    writeStream
                 ) const;
+
+                void _createUsersChangesetsTables() const;
         };
     }
 }

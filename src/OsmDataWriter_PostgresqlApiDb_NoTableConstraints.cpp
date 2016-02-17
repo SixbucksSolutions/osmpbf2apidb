@@ -59,49 +59,14 @@ namespace OsmDataWriter
 
         NoTableConstraints::~NoTableConstraints()
         {
-            /*
-               ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
-               ::std::shared_ptr <
-               ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
+            _createUsersChangesetsTables();
+        }
 
-               std::cout << "Printing changesets:" << std::endl;
-
-            // Write out changesets
-            for ( iter =  m_changesets.cbegin();
-            iter != m_changesets.cend();
-            ++iter )
-            {
-            const ::std::shared_ptr <
-            ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
-            iter->second);
-
-            std::cout <<
-            "\tChangeset   : " << currChangeset->getChangesetId() <<
-            std::endl <<
-
-            "\t\tUser ID   : " << currChangeset->getUserId() <<
-            std::endl <<
-
-            "\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
-            std::endl <<
-
-            "\t\tOpened at : " << _generateISO8601(
-            currChangeset->getOpenedAt()) << std::endl <<
-
-            "\t\tClosed at : " << _generateISO8601(
-            currChangeset->getClosedAt()) << std::endl <<
-
-            "\t\tChanges   : " << currChangeset->getChanges() <<
-            std::endl;
-            }
-             */
-
-            // Write out users and changesets
+        void NoTableConstraints::_createUsersChangesetsTables() const
+        {
             ::std::unordered_set<::std::string> writtenUsernames;
-
             ::std::ofstream userStream( (m_outputDir / "users.sql").string(),
                                         ::std::ofstream::binary);
-
             ::std::ofstream changesetStream( (m_outputDir / "changesets.sql").string(),
                                              ::std::ofstream::binary);
 
@@ -133,21 +98,35 @@ namespace OsmDataWriter
 
                 // Did we find a new user?
                 const ::std::string username( currChangeset.getUsername().toUtf8() );
+                const ::OsmFileParser::OsmPrimitive::Identifier userId(
+                    currChangeset.getUserId() );
 
                 if ( writtenUsernames.count(username) == 0 )
                 {
                     userStream <<
-                               "osmuser"                    <<
-                               currChangeset.getUserId()           <<
-                               "@osmpbf2apidb.local"                << "\t" <<
-                               currChangeset.getUserId()                    << "\t" <<
-                               ""                                       << "\t" <<
+                               "osmuser"                                        <<
+                               userId                                   <<
+                               "@osmpbf2apidb.local"                            << "\t" <<
+                               userId                                   << "\t" <<
+                               ""                                               << "\t" <<
                                _generateISO8601(currChangeset.getOpenedAt())    << "\t" <<
-                               username                                 <<
+                               username                                         <<
                                ::std::endl;
 
                     writtenUsernames.insert( username );
                 }
+
+                changesetStream <<
+                                currChangeset.getChangesetId()          << "\t" <<
+                                userId                      << "\t" <<
+                                _generateISO8601(currChangeset.getOpenedAt())   << "\t" <<
+                                "-900000000"                   << "\t" <<
+                                "900000000"                    << "\t" <<
+                                "-1800000000"                   << "\t" <<
+                                "1800000000"                                    << "\t" <<
+                                _generateISO8601(currChangeset.getClosedAt())   << "\t" <<
+                                currChangeset.getChanges()              <<
+                                ::std::endl;
             }
 
 
