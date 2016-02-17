@@ -58,43 +58,42 @@ namespace OsmDataWriter
 
         NoTableConstraints::~NoTableConstraints()
         {
-	    /*
-            ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
-            ::std::shared_ptr <
-            ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
+            /*
+                ::std::map < ::OsmFileParser::OsmPrimitive::Identifier,
+                ::std::shared_ptr <
+                ::OsmFileParser::OsmPrimitive::Changeset >>::const_iterator iter;
 
-            std::cout << "Printing changesets:" << std::endl;
+                std::cout << "Printing changesets:" << std::endl;
 
-            // Write out changesets
-            for ( iter =  m_changesets.cbegin();
-                    iter != m_changesets.cend();
-                    ++iter )
-            {
-                const ::std::shared_ptr <
-                ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
-                    iter->second);
+                // Write out changesets
+                for ( iter =  m_changesets.cbegin();
+                        iter != m_changesets.cend();
+                        ++iter )
+                {
+                    const ::std::shared_ptr <
+                    ::OsmFileParser::OsmPrimitive::Changeset > currChangeset(
+                        iter->second);
 
-		/*
-                std::cout << 
-			"\tChangeset   : " << currChangeset->getChangesetId() <<
-                        std::endl <<
+                    std::cout <<
+                "\tChangeset   : " << currChangeset->getChangesetId() <<
+                            std::endl <<
 
-                	"\t\tUser ID   : " << currChangeset->getUserId() <<
-                        std::endl <<
+                        "\t\tUser ID   : " << currChangeset->getUserId() <<
+                            std::endl <<
 
-                	"\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
-                        std::endl <<
+                        "\t\tUsername  : " << currChangeset->getUsername().toUtf8() <<
+                            std::endl <<
 
-                	"\t\tOpened at : " << _generateISO8601(
-                        currChangeset->getOpenedAt()) << std::endl <<
+                        "\t\tOpened at : " << _generateISO8601(
+                            currChangeset->getOpenedAt()) << std::endl <<
 
-                	"\t\tClosed at : " << _generateISO8601(
-                              currChangeset->getClosedAt()) << std::endl <<
+                        "\t\tClosed at : " << _generateISO8601(
+                                  currChangeset->getClosedAt()) << std::endl <<
 
-			"\t\tChanges   : " << currChangeset->getChanges() <<
-			std::endl;
-            }
-	    */
+                "\t\tChanges   : " << currChangeset->getChanges() <<
+                std::endl;
+                }
+            */
         }
 
 
@@ -729,7 +728,7 @@ namespace OsmDataWriter
             if ( searchIter == m_changesets.end() )
             {
                 // Need to add to list
-		changeset->incrementChanges();
+                changeset->incrementChanges();
                 m_changesets.insert( ::std::make_pair(changesetId, changeset) );
             }
             else
@@ -737,7 +736,7 @@ namespace OsmDataWriter
                 // Update access time
                 searchIter->second->updateAccess(changeset->getOpenedAt());
                 searchIter->second->updateAccess(changeset->getClosedAt());
-		searchIter->second->incrementChanges();
+                searchIter->second->incrementChanges();
             }
         }
 
