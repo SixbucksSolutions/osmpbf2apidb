@@ -118,7 +118,7 @@ namespace OsmDataWriter
 
                 ::std::string _generateISO8601(
                     const ::OsmFileParser::OsmPrimitive::Timestamp&     timestamp
-                ) const;
+                );
 
                 void _writeCurrentTags(
                     const ::OsmFileParser::OsmPrimitive::Primitive&     primitive,
@@ -175,7 +175,11 @@ namespace OsmDataWriter
                     ::std::ostream&    writeStream
                 ) const;
 
-                void _createUsersChangesetsTables() const;
+                void _createUsersChangesetsTables();
+
+                void _escapePostgresString(
+                    ::std::string&     utf8String
+                ) const;
         };
     }
 }

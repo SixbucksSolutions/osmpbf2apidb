@@ -9,9 +9,10 @@
 #include <fstream>
 #include <ctime>
 #include <cmath>
-#include <unordered_set>
+#include <set>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 #include "OsmFileParser/include/Primitive.hpp"
 #include "OsmFileParser/include/PrimitiveVisitor.hpp"
 #include "OsmFileParser/include/Node.hpp"
@@ -62,9 +63,9 @@ namespace OsmDataWriter
             _createUsersChangesetsTables();
         }
 
-        void NoTableConstraints::_createUsersChangesetsTables() const
+        void NoTableConstraints::_createUsersChangesetsTables()
         {
-            ::std::unordered_set<::std::string> writtenUsernames;
+            ::std::set<::OsmFileParser::OsmPrimitive::Identifier> writtenUsers;
             ::std::ofstream userStream( (m_outputDir / "users.sql").string(),
                                         ::std::ofstream::binary);
             ::std::ofstream changesetStream( (m_outputDir / "changesets.sql").string(),
@@ -97,11 +98,12 @@ namespace OsmDataWriter
                     *(iter->second));
 
                 // Did we find a new user?
-                const ::std::string username( currChangeset.getUsername().toUtf8() );
+                ::std::string username( currChangeset.getUsername().toUtf8() );
+                _escapePostgresString(username);
                 const ::OsmFileParser::OsmPrimitive::Identifier userId(
                     currChangeset.getUserId() );
 
-                if ( writtenUsernames.count(username) == 0 )
+                if ( writtenUsers.count(userId) == 0 )
                 {
                     userStream <<
                                "osmuser"                                        <<
@@ -110,10 +112,10 @@ namespace OsmDataWriter
                                userId                                   << "\t" <<
                                ""                                               << "\t" <<
                                _generateISO8601(currChangeset.getOpenedAt())    << "\t" <<
-                               username                                         <<
+                               username                                      <<
                                ::std::endl;
 
-                    writtenUsernames.insert( username );
+                    writtenUsers.insert( userId);
                 }
 
                 changesetStream <<
@@ -367,15 +369,19 @@ namespace OsmDataWriter
         }
 
         ::std::string NoTableConstraints::_generateISO8601(
-            const ::OsmFileParser::OsmPrimitive::Timestamp& timestamp ) const
+            const ::OsmFileParser::OsmPrimitive::Timestamp& timestamp )
         {
-            char conversionBuffer[32];
-            ::std::strftime( reinterpret_cast<char*>(&conversionBuffer),
-                             sizeof(conversionBuffer),
-                             "%F %T",
-                             ::std::gmtime(&timestamp) );
+            ::std::tm utcTime;
 
-            return ::std::string(conversionBuffer);
+            // Have to use re-entrant (read: thread-safe) version of
+            //    gmtime
+            gmtime_r(&timestamp, &utcTime);
+
+            char convertTimeBuffer[ sizeof("YYYY-MM-DD HH:MM:SS") + 1 ];
+            strftime( convertTimeBuffer, sizeof(convertTimeBuffer),
+                      "%F %T", &utcTime );
+
+            return ::std::string(convertTimeBuffer);
         }
 
         unsigned int NoTableConstraints::_lonLatToTileNumber(
@@ -429,8 +435,11 @@ namespace OsmDataWriter
             for ( ::OsmFileParser::OsmPrimitive::PrimitiveTags::const_iterator
                     tagsIter = tags.begin(); tagsIter != tags.end(); ++tagsIter )
             {
-                const ::std::string tagKey      = tagsIter->getKey().toUtf8();
-                const ::std::string tagValue    = tagsIter->getValue().toUtf8();
+                ::std::string tagKey      = tagsIter->getKey().toUtf8();
+                ::std::string tagValue    = tagsIter->getValue().toUtf8();
+                _escapePostgresString(tagKey);
+                _escapePostgresString(tagValue);
+
                 *currentTagsStream <<
                                    id              << "\t" <<
                                    tagKey          << "\t" <<
@@ -725,7 +734,8 @@ namespace OsmDataWriter
                 const ::OsmFileParser::OsmPrimitive::Identifier memberId =
                     currRelationMember.memberId;
 
-                const ::std::string memberRole(currRelationMember.memberRole.toUtf8());
+                ::std::string memberRole(currRelationMember.memberRole.toUtf8());
+                _escapePostgresString(memberRole);
 
                 *currentRelationMembersStream  <<
                                                relationId          << "\t" <<
@@ -797,6 +807,22 @@ namespace OsmDataWriter
             const unsigned char utf8BOM[3] = { 0xEF, 0xBB, 0xBF };
             writeStream.write( reinterpret_cast<const char*>(
                                    utf8BOM), sizeof(utf8BOM) );
+        }
+
+        /**
+         *   Escape characters required by
+         *  http://www.postgresql.org/docs/9.5/static/sql-copy.html
+         */
+        void NoTableConstraints::_escapePostgresString(
+            ::std::string&  outputString) const
+        {
+            ::boost::replace_all(outputString, "\\", "\\\\" );
+            ::boost::replace_all(outputString, "\x8", "\\b" );
+            ::boost::replace_all(outputString, "\x9", "\\t" );
+            ::boost::replace_all(outputString, "\xA", "\\n" );
+            ::boost::replace_all(outputString, "\xB", "\\v" );
+            ::boost::replace_all(outputString, "\xC", "\\f" );
+            ::boost::replace_all(outputString, "\xD", "\\r" );
         }
 
     }
