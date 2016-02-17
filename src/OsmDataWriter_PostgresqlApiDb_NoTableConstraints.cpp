@@ -93,7 +93,7 @@ namespace OsmDataWriter
                 "\t\tChanges   : " << currChangeset->getChanges() <<
                 std::endl;
                 }
-          	*/
+            */
         }
 
 
@@ -728,11 +728,7 @@ namespace OsmDataWriter
             if ( searchIter == m_changesets.end() )
             {
                 // Need to add to list
-<<<<<<< HEAD
                 changeset->incrementChanges();
-=======
-		changeset->incrementChanges();
->>>>>>> 771209c85aacf06930eb8beaf2478ca6fa61a422
                 m_changesets.insert( ::std::make_pair(changesetId, changeset) );
             }
             else
@@ -740,11 +736,7 @@ namespace OsmDataWriter
                 // Update access time
                 searchIter->second->updateAccess(changeset->getOpenedAt());
                 searchIter->second->updateAccess(changeset->getClosedAt());
-<<<<<<< HEAD
                 searchIter->second->incrementChanges();
-=======
-		searchIter->second->incrementChanges();
->>>>>>> 771209c85aacf06930eb8beaf2478ca6fa61a422
             }
         }
 
